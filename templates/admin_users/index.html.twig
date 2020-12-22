@@ -29,6 +29,7 @@
                                             <input type="checkbox" id="{{ user.id }}_admin" name="{{ user.id }}_admin" {% if 'ROLE_ADMIN' in user.roles %} checked {% endif %}>
                                         </div>
                                         <div>
+                                            <a href="{{ path('admin_users_edit', {id: user.id}) }}">edit</a>
                                             <label for="{{ user.id }}_manager">Manager role</label>
                                             <input type="checkbox" id="{{ user.id }}_manager" name="{{ user.id }}_manager" {% if 'ROLE_ACCEPT_CHANGES' in user.roles %} checked {% endif %}>
                                         </div>

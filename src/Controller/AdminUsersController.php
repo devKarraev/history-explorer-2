@@ -12,7 +12,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 class AdminUsersController extends AbstractController
 {
     /**
-     * @Route("/admin/users", name="admin_users")
+     * @Route("/admin/users", name="admin_users", methods={"GET"})
      */
     public function index(UserRepository $userRepository): Response
     {
@@ -28,7 +28,15 @@ class AdminUsersController extends AbstractController
     }
 
     /**
-     * @Route("/admin/users/update-roles", name="users_update_roles")
+     * @Route("/admin/users/edit/{id}", name="admin_users_edit", methods={"GET"})
+     */
+    public function edit(Request $request)
+    {
+        dd($request->get('id'));
+    }
+
+    /**
+     * @Route("/admin/users/update-roles", name="users_update_roles", methods={"POST"})
      */
     public function updateRoles(Request $request)
     {
