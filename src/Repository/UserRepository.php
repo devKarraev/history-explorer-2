@@ -36,6 +36,16 @@ class UserRepository extends ServiceEntityRepository
     }
     */
 
+    public function findByNot($field, $value)
+    {
+        $qb = $this->createQueryBuilder('a');
+        $qb->where($qb->expr()->not($qb->expr()->eq('a.'.$field, '?1')));
+        $qb->setParameter(1, $value);
+
+        return $qb->getQuery()
+            ->getResult();
+    }
+
     /*
     public function findOneBySomeField($value): ?User
     {
