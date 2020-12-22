@@ -1,0 +1,111 @@
+{% extends 'content_base.html.twig' %}
+
+{% block title %}Read: {{ person.name }}{% endblock %}
+
+{% block content_body %}
+
+    <h1>
+        <a href="{{ path('persons_list') }}">
+            <i class="pr-3 fa fa-backward"></i>
+        </a></h1>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="show-article-container p-3 mt-4">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            {% if is_granted('ROLE_EDIT_ENTITY') %}
+                                <a href="{{ path('person_edit', {id: person.id}) }}" class="btn btn-primary pull-right">
+                                    Edit <span class="fa fa-pencil-square"></span>
+                                </a>
+                            {% endif %}
+                            <img class="show-article-img" src="{{ person.image | imagine_filter('squared_thumbnail_medium')}}">
+                            <div class="show-article-title-container d-inline-block pl-3 align-middle">
+                                <span class="show-article-title ">{{ person.name }}</span>
+                                <span class="article-text"> {{  not person.born ? person.born(true, true) ~'(?)': person.born(true) }} to {{ not person.died ? person.died(true, true) ~ '(?)' : person.died(true)}}</span>
+                                <br>
+                                {% if person.father.id is defined %}
+                                    <span class="align-left article-details">
+                                        <a href="{{ path('person_show', {id: person.father.id}) }}">
+                                            <img class="article-author-img rounded-circle" src="{{ person.father.image| imagine_filter('squared_thumbnail_small') }}">{{person.father.name}}
+                                        </a>
+                                    </span>
+                                {% endif %}
+                                {% if person.mother.id is defined %}
+                                    <span class="align-left article-details">
+                                        <a href="{{ path('person_show', {id: person.mother.id}) }}">
+                                            <img class="article-author-img rounded-circle" src="{{ person.mother.image| imagine_filter('squared_thumbnail_small') }}">{{ person.mother.name}}
+                                        </a>
+                                    </span>
+                                {% endif %}
+
+                                <span class="pl-2 article-details">
+                                {#{ article.publishedAt ? article.publishedAt | ago : 'unpublished'}#}
+                                </span>
+                                <span class="pl-2 article-details">
+                                {#<span class="js-like-article-count">{{ article.heartCount }}</span>
+                                <a href="{{ path('article_toggle_heart', {slug:  article.slug}) }}" class="fa fa-heart-o like-article js-like-article"></a>#}
+                            </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="article-text">
+                                {#{  article.content|cached_markdown }#}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <p class="share-icons mb-5"><span class="pr-1">Share:</span> <i class="pr-1 fa fa-facebook-square"></i><i class="pr-1 fa fa-twitter-square"></i><i class="pr-1 fa fa-reddit-square"></i><i class="pr-1 fa fa-share-alt-square"></i></p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <h3><i class="pr-3 fa fa-comment"></i>{{ person.children|length }} Children</h3>
+
+                                <table class="table table-striped">
+                                <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Name</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for child in person.children %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ path('person_show', {id: child.id}) }}">
+                                                <img class="comment-img rounded-circle" src="{{ asset( child.image | imagine_filter('squared_thumbnail_small') ) }}">
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="{{ path('person_show', {id: child.id}) }}">
+                                                <div class="comment-container d-inline-block pl-3 align-top">
+                                                    <span class="comment"> {{ child.name }}</span>
+                                                    <!--p><a href="#">Reply</a></p-->
+                                                </div>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    Keine Kinder
+                                {% endfor %}
+                        </tbody>
+                        </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    <script src="{{ asset('js/article_show.js') }}"></script>
+{% endblock %}

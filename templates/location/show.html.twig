@@ -1,0 +1,116 @@
+{% extends 'content_base.html.twig' %}
+
+{% block title %}Show Location {{ location.name }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+          integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+          crossorigin=""/>
+    <link rel="stylesheet" href="{{ asset('css/map.css') }}">
+{% endblock %}
+
+{% block content_body %}
+    {% set refTypes = {
+        test : 'test',
+    } %}
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-6">
+                <table class="table">
+                    <tr>
+                        <td>
+                            {% if is_granted('ROLE_EDIT_ENTITY') %}
+                                <a href="{{ path('location_edit', {id: location.id}) }}" class="btn btn-primary">
+                                    Edit <span class="fa fa-pencil-square"></span>
+                                </a>
+                            {% endif %}
+                            <img class="show-article-icon" src="{{  location.image|imagine_filter('squared_thumbnail_medium')  }}">
+                        </td>
+                        <td>
+                            <h1>
+                                {{ location.name }}
+                                {% if location.todayKnownAs is defined %}
+                                    <br>{{ location.todayKnownAs }}
+                                {% endif %}
+                            </h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ location.type }}
+                        </td>
+                        <td>
+                            Lat: {{  location.lat }} <br>
+                            Lon: {{location.lon }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            {{location.description }}
+                        </td>
+                    </tr>
+                    {% set refIndex = 0 %}
+                    {% for key, value in refTypes %}
+                        <div id="{{ refIndex }}">
+                            {% for locationreference in location.referenceList(key) %}
+                                <tr>
+                                    <td>
+                                        <i class="pr-3 fa fa-external-link"></i>
+                                        <div class="comment-container d-inline-block pl-3 align-top">
+                                            <a href="{{ locationreference.reference.generateBibleServerUrl }}",
+                                               onclick="window.open('{{ locationreference.reference.generateBibleServerUrl }}',
+                                                       'newwindow',
+                                                       'width=400,height=250');
+                                                       return false;"
+                                            > {{ locationreference.reference }}
+                                            </a>
+                                        </div>
+
+                                    </td>
+                                    <td>
+                                        {{ value }}
+                                    </td>
+                                </tr>
+                            {% else %}
+
+                            {% endfor %}
+                        </div>
+                        {% set refIndex = refIndex +1 %}
+                    {% endfor %}
+                </table>
+            </div>
+            <div class="col-sm-6">
+                <div id="mapid"></div>
+            </div>
+        </div>
+
+
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+            integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+            crossorigin=""></script>
+
+    <script type="text/javascript">
+
+
+        var map = L.map('mapid').setView([{{location.lat}}, {{location.lon}}], 8);
+        mapLink =
+            '<a href="http://openstreetmap.org">OpenStreetMap</a>';
+        L.tileLayer(
+            'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; ' + mapLink + ' Contributors',
+                maxZoom: 18,
+            }).addTo(map);
+
+
+        var marker = new L.marker([{{location.lat}}, {{location.lon}}])
+                .addTo(map);
+
+    </script>
+{% endblock %}

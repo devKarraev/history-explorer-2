@@ -1,0 +1,41 @@
+{% extends 'content_base.html.twig' %}
+
+{% block content_body %}
+     <a href="{{ path('add_person') }}" class="btn btn-primary pull-right">
+        Create <span class="fa fa-plus-circle"></span>
+    </a>
+    <h1>All Persons</h1>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Published?</th>
+            <th>&nbsp;</th>
+        </tr>
+        </thead>
+        {#<tr class="filters">
+            <th>{{form_widget(filterForm.nummer, {attr:{class: 'input-sm', title: 'Nach Namen filtern'}} )}}</th>
+            <th>{{form_widget(filterForm.nummer, {attr:{class: 'input-sm', title: 'Nach Blechnummer filtern'}} )}}</th>
+            <th></th>
+        </tr>#}
+        <tbody>
+        {% for person in persons %}
+            <tr>
+                <td>{{ person.name }}</td>
+                <td>
+                    <span class="fa fa-{{ person.isPublished ? 'check' : 'times' }}"></span>
+                </td>
+                <td>
+                    <a href="{{path('person_edit', {
+                                id: person.id
+                    })
+                    }}">
+                        <span class="fa fa-pencil"></span>
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

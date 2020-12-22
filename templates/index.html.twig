@@ -1,0 +1,79 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    {{ parent() }}
+    <div class="jumbotron-img jumbotron jumbotron-fluid">
+        <div class="container">
+            <h1 class="display-5">History Explorer</h1>
+            <p class="lead">Visualise history, make it vivid!</p>
+            What is History Explorer? First, History Explorer is a database of all persons, locations and events mentioned in the bible.
+            But History Explorer is more! It combines all the given information to generate awesome maps, which help to understand the complex contexts and coherences.
+        </div>
+    </div>
+    <div class="container">
+          <div class="row">
+            <div class="col-sm-12">
+                <div class="show-article-container p-3 mt-2" style="box-shadow: 2px 3px 9px 4px rgba(0,0,0,0.04);">
+                   <h3> History Explorer provides awesome maps:</h3>
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <a href="{{ path('pedigree') }}"><img src="{{ asset('images/familytree.png') }}" width="200" height="200"></a>
+                                </td>
+                                <td>
+                                    <a href="{{ path('timeline') }}"><img src="{{ asset('images/timeline.png') }}" width="200" height="200"></a>
+                                </td>
+                                <td>
+                                    <a href="{{ path('timemap') }}"><img src="{{ asset('images/timemap.png') }}" width="200" height="200"></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    a big familiy tree - all family connections
+                                </td>
+                                <td>
+                                    a timeline of all events
+                                </td>
+                                <td>
+                                    a timemap of all events
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="show-article-container p-3 mt-2" style="box-shadow: 2px 3px 9px 4px rgba(0,0,0,0.04);">
+                    <h3>Also you can search and see details of persons, locations and event in lists...</h3>
+                    <table class="table">
+                        <tbody>
+                        <tr>
+                            <td>
+                                <a href="{{ path('persons_list') }}"><img src="{{ asset('images/personlist.png') }}" width="200" height="200"></a>
+                            </td>
+                            <td>
+                                <a href="{{ path('locations') }}"><img src="{{ asset('images/locationlist.png') }}" width="200" height="200"></a>
+                            </td>
+                            <td>
+                                <a href="{{ path('event_list') }}"><img src="{{ asset('images/eventlist.png') }}" width="200" height="200"></a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                ... all persons and folks
+                            </td>
+                            <td>
+                                ... all locations
+                            </td>
+                            <td>
+                                ... all events!
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+

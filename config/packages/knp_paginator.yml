@@ -1,0 +1,7 @@
+knp_paginator:
+  template:
+    pagination: '@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig'
+    sortable: '@KnpPaginator/Pagination/twitter_bootstrap_v4_font_awesome_sortable_link.html.twig' # sort link template
+    filtration: '@KnpPaginator/Pagination/twitter_bootstrap_v4_filtration.html.twig'  # filters template
+  default_options:
+    #sort_field_name: ~ # Disable sorting

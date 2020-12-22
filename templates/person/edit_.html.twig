@@ -1,0 +1,162 @@
+{% extends 'content_base.html.twig' %}
+
+{% block title %}Edit {{ person.name }}{% endblock %}
+
+{% block body %}
+
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="show-article-container p-3 mt-4">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <img class="show-article-img" src="{{ asset(person.imagePath)}}">
+                            <div class="show-article-title-container d-inline-block pl-3 align-middle">
+                                <span class="show-article-title ">{{ person.name }}</span>
+                                <br>
+                                {% if person.father.id is defined %}
+                                    <span class="align-left article-details">
+                                        <a href="{{ path('person_show', {id: person.father.id}) }}">
+                                            <img class="article-author-img rounded-circle" src="{{ asset(person.father.imagePath) }}">{{person.father.name}}
+                                        </a>
+                                    </span>
+                                {% endif %}
+                                {% if person.mother.id is defined %}
+                                    <span class="align-left article-details">
+                                        <a href="{{ path('person_show', {id: person.mother.id}) }}">
+                                            <img class="article-author-img rounded-circle" src="{{ asset(person.mother.imagePath) }}">{{ person.mother.name}}
+                                        </a>
+                                    </span>
+                                {% endif %}
+                                <span class="pl-2 article-details">
+                                {#{ article.publishedAt ? article.publishedAt | ago : 'unpublished'}#}
+                                </span>
+                                <span class="pl-2 article-details">
+                                {#<span class="js-like-article-count">{{ article.heartCount }}</span>
+                                <a href="{{ path('article_toggle_heart', {slug:  article.slug}) }}" class="fa fa-heart-o like-article js-like-article"></a>#}
+                            </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="article-text">
+                                {#{  article.content|cached_markdown }#}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <p class="share-icons mb-5"><span class="pr-1">Share:</span> <i class="pr-1 fa fa-facebook-square"></i><i class="pr-1 fa fa-twitter-square"></i><i class="pr-1 fa fa-reddit-square"></i><i class="pr-1 fa fa-share-alt-square"></i></p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <h3><i class="pr-3 fa fa-comment"></i>{{ person.children|length }} Children</h3>
+
+                                <table class="table table-striped">
+                                <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Name</th>
+                                    <th>Verbindung lösen</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for child in person.children %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ path('person_show', {id: child.id}) }}">
+                                                <img class="comment-img rounded-circle" src="{{ asset( child.imagePath ) }}">
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="{{ path('person_show', {id: child.id}) }}">
+                                                <div class="comment-container d-inline-block pl-3 align-top">
+                                                    <span class="comment"> {{ child.name }}</span>
+                                                    <!--p><a href="#">Reply</a></p-->
+                                                </div>
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="{{path('removeLink', {'parent': person.id, 'child' : child.id}) }}" class='btn btn-danger btn-xs' title='Löschen' data-confirm='<h3>Soll diese Person wirklich als Kind enfernt?</h3>'>
+                                            <span class="glyphicon glyphicon-add"></span>&nbsp;Verbindung lösen</a>
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    Keine Kinder
+                                {% endfor %}
+                        </tbody>
+                        </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3><i class="pr-3 fa fa-comment"></i>{{ addchildren|length }} Kandidaten</h3>
+
+                        <form>
+                            <div class="input-group mb-3">
+                                <input type="text"
+                                       name="q"
+                                       class="form-control"
+                                       placeholder="Add child.."
+                                       value="{{ app.request.query.get('q') }}"
+                                >
+                                <div class="input-group-append">
+                                    <button type="submit"
+                                            class="btn btn-outline-secondary">
+                                        <span class="fa fa-search"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th></th>
+                                <th>Name</th>
+                                <th>Hinzufügen</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for child in addchildren %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ path('person_show', {id: child.id}) }}">
+                                            <img class="comment-img rounded-circle" src="{{ asset( child.imagePath ) }}">
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="{{ path('person_show', {id: child.id}) }}">
+                                            <div class="comment-container d-inline-block pl-3 align-top">
+                                                <span class="comment"> {{ child.name }}</span>
+                                                <!--p><a href="#">Reply</a></p-->
+                                            </div>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="{{path('addLink', {'parent': person.id, 'child' : child.id}) }}" class='btn btn-success btn-xs' title='Hinzufügen' data-confirm='<h3>Soll diese Person wirklich als Kind hinzugefügt?</h3>'>
+                                            <span class="glyphicon glyphicon-add"></span>&nbsp;Kind hinzufügen</a>
+                                    </td>
+                                </tr>
+                            {% else %}
+
+                            {% endfor %}
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    <script src="{{ asset('js/article_show.js') }}"></script>
+{% endblock %}

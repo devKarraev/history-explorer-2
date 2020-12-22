@@ -1,0 +1,111 @@
+.elements{
+    /*fill: #FF8800;*/
+    stroke:rgb(0,0,0);
+}
+
+.elements.b{
+    /*fill: #FF8800;*/
+    stroke:none;
+}
+
+.elements.birth{
+    fill: #00AA00;
+
+}
+
+.elements.death{
+    fill: #444444;
+}
+
+.elements.event{
+    fill: #FF8800;
+}
+
+.elements.event > .label{
+    fill: #000;
+}
+
+.elements.m{
+    /*fill: #AAAAAA;*/
+}
+
+.elements.w{
+    fill: #FF6666;
+}
+
+.elements.b{
+    fill: #C39044;
+}
+.elements.folk{
+    fill: #AAAA00;
+    opacity: 0.3;
+}
+
+.elements.hidden{
+    opacity: 0.0;
+    stroke-opacity: 0.0;
+}
+
+.book.hidden{
+    opacity: 0.0;
+    stroke-opacity: 0.0;
+}
+
+.elements.not-selected {
+    opacity: 0.25;
+}
+
+.elements.selected {
+    stroke:rgb(0,0,0);
+    fill: lightgreen !important;
+}
+
+.location.selected{
+    fill: yellow !important;
+}
+
+.sankey-links.labeled {
+    stroke-opacity: .5;
+    fill: darkOrange;
+}
+
+.sankey-links.selected {
+    /*fill: lightgreen;*/
+    stroke: lightgreen;
+}
+
+.sankey-links.not-selected {
+    opacity: 0.25;
+}
+
+.sankey-links.hidden{
+    opacity: 0.0;
+    stroke-opacity: 0.0;
+}
+
+.label.hidden{
+    opacity: 0.0;
+}
+/*
+.connections:hover {
+    stroke-opacity: .5;
+}*/
+
+.axis path, .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.tick{
+    font: 16px sans-serif;
+}
+/*
+.bookroll.left{
+    position:absolute;
+    top:50px;
+    left:0px;
+    background-color: #666600;
+
+    border-radius: 50px /25px;
+}*/

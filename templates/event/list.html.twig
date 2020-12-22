@@ -1,0 +1,83 @@
+{% extends 'content_base.html.twig' %}
+
+{% block content_body %}
+
+        <!-- H1 Article -->
+        <a class="main-article-link" href="#">
+            <div class="main-article mb-5 pb-3">
+                {#  <img src="{{ asset('images/histo-nav.jpg') }}" alt="events">#}
+                <h1 class="text-center mt-2">Event List</h1>
+            </div>
+        </a>
+        {{ knp_pagination_render(pagination) }}
+        <table class="table table-striped advanced-table">
+            <thead>
+            <tr>
+                <th></th>
+                <th>{{knp_pagination_sortable(pagination, 'Name', 'e.name') }}</th>
+                <th>{{knp_pagination_sortable(pagination, 'Date', 'e.orderedIndex') }}</th>
+                <th>&nbsp</th>
+            </tr>
+            <tr>
+                <th></th>
+                <th>
+                <form>
+                    <div class="input-group mb-3">
+                        <input type="text"
+                               name="q"
+                               class="form-control"
+                               placeholder="Search..."
+                               value="{{ app.request.query.get('q') }}"
+                        >
+                        <div class="input-group-append">
+                            <button type="submit"
+                                    class="btn btn-outline-secondary">
+                                <span class="fa fa-filter"></span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                </th>
+                <th></th>
+                <th></th>
+                <th>
+                    <a href="{{ path('add_event') }}" class="btn btn-primary pull-right">
+                        Create <span class="fa fa-plus-circle"></span>
+                    </a>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+        <!-- Supporting Persons -->
+                {% for event in pagination %}
+                <tr>
+                    <td>
+                        <a href="{{ path('event_show', {id: event.id}) }}">
+                            <img class="article-img" src="{{ event.image | imagine_filter('squared_thumbnail_small') }}">
+                        </a>
+                    </td>
+                    <td>
+                        <div class="d-inline-block pl-3 align-middle">
+                            <span>{{ event.name }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-inline-block pl-3 align-middle">
+                            <span>{{ event.yearCalculated }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="{{path('event_edit', {
+                            id: event.id
+                        })
+                        }}">
+                            <span class="fa fa-pencil"></span>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {{ knp_pagination_render(pagination) }}
+
+{% endblock %}

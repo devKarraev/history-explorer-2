@@ -1,0 +1,99 @@
+{% extends 'content_base.html.twig' %}
+
+{% block title %}Read: {{ event.name }}{% endblock %}
+
+{% block content_body %}
+
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="show-article-container p-3 mt-4">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            {% if is_granted('ROLE_EDIT_ENTITY') %}
+                                <a href="{{ path('event_edit', {id: event.id}) }}" class="btn btn-primary pull-right">
+                                    Edit <span class="fa fa-pencil-square"></span>
+                                </a>
+                            {% endif %}
+                            <img class="show-article-img" src="{{ event.image | imagine_filter('squared_thumbnail_medium')}}">
+                            <div class="show-article-title-container d-inline-block pl-3 align-middle">
+                                <h1>{% if is_granted('ROLE_EDIT_ENTITY') %}
+                                    <a href="{{ path('add_event')~'?before='~event.id }}" class="btn btn-primary"><span class="fa fa-plus-circle"></span></a>
+                                {% endif %}
+                                {% if event.happenedAfter %}
+                                    <a href="{{ path('event_show', {id: event.happenedAfter.id}) }}" class="pl-2 article-details fa fa-backward"></a>
+                                {% endif %}
+                                {% if event.happenedBefore %}
+                                    <a href="{{ path('event_show', {id: event.happenedBefore.id}) }}" class="pl-2 article-details fa fa-forward"></a>
+                                {% endif %}
+                                {% if is_granted('ROLE_EDIT_ENTITY') %}
+                                    <a href="{{ path('add_event')~'?after='~event.id }}" class="btn btn-primary"><span class="fa fa-plus-circle"></span></a>
+                                {% endif %}
+                                </h1>
+                                <br>
+                                <span class="show-article-title ">{{ event.name }}</span>
+
+                              {#  <span class="article-text"> {{ not event.time ? person.born(true) ~'(?)': person.born }} to {{ not person.died ? person.died(true) ~ '(?)' : person.died}}</span>
+                              #}
+                                <span class="show-article-title"><br>
+                                    <i class="pr-3 fa fa-clock-o"></i> {{ event.year ? event.year() : event.year(true) ? '~' ~ event.year(true) : '~' ~ event.year(true, true) }}
+                                    <br>
+                                    <i class="pr-3 fa fa-crosshairs"></i>
+                                    {%  if event.location  %}
+                                        <a href="{{ path('location_show', {id: event.location.id}) }}">{{ event.location.name}}</a>
+                                    {% endif %}
+                                </span>
+                                {#<span class="js-like-article-count">{{ article.heartCount }}</span>
+                                <a href="{{ path('article_toggle_heart', {slug:  article.slug}) }}" class="fa fa-heart-o like-article js-like-article"></a>#}
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <h3><i class="pr-3 fa fa-group"></i>{{ event.participants|length }} Participants</h3>
+
+                                <table class="table table-striped">
+                                <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Name</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for participant in event.participants %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ path('person_show', {id: participant.id}) }}">
+                                                <img class="comment-img rounded-circle" src="{{ participant.image |imagine_filter('squared_thumbnail_small') }}">
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="{{ path('person_show', {id: participant.id}) }}">
+                                                <div class="comment-container d-inline-block pl-3 align-top">
+                                                    <span class="comment"> {{ participant.name }}</span>
+                                                </div>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    Keine Teilnehmer
+                                {% endfor %}
+                        </tbody>
+                        </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    <script src="{{ asset('js/article_show.js') }}"></script>
+{% endblock %}

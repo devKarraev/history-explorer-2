@@ -1,0 +1,151 @@
+{% extends 'content_base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/d3.css') }}">
+{% endblock %}
+
+{% block title %}Timeline{% endblock %}
+
+{% block content_container %}
+    <div id="infoContainer" class="container" style="display:none">
+        <div class="row">
+            <div class="col-sm-2 p-3 sticker">
+                <button onclick="$('#personInfoContainer').hide()" class="btn btn-danger pull-right" style="box-shadow:none">X</button>
+                <div id="info" data-event_info-url="{{ event_info_url }}" data-person_info-url="{{ person_info_url }}"></div>
+            </div>
+        </div>
+    </div>
+    <div class="fixed">
+        <input class="m-3" id="search_name" data-autocomplete-url = "{{ path('person_utility_names') }}"type="text" name="submit_search" placeholder="Find Name, e.g. 'David'"><br>
+        {# <span onclick="toggleFolks()"><i id="show_folks" class='fa fa-group fa-2x m-1'></i></span><br>
+        <span onclick="toggleBooks()"><i id="show_books" class='fa fa-book fa-2x m-1'></i></span>#}
+    </div>
+{% endblock %}
+
+{% block content_body %}
+     <div class="container" id="canvas-svg">
+        <div id="chart" class="chart"></div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script type="text/javascript" src="{{ asset('js/d3.v5.min.js')}}"></script>
+    <script type="text/javascript" src="{{ asset('js/event_widget.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('js/person_widget.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('js/d3-axis.min.js')}}"></script>
+
+    <script type="text/javascript" src="{{ asset('js/utilities.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('js/timeline.js') }}"></script>
+    <script src="https://d3js.org/d3-selection-multi.v1.min.js"></script>
+
+    <script src="https://unpkg.com/d3-array@2"></script>
+    <script src="https://unpkg.com/d3-collection@1"></script>
+    <script src="https://unpkg.com/d3-path@1"></script>
+    <script src="https://unpkg.com/d3-shape@1"></script>
+    <script src="https://unpkg.com/d3-sankey@0"></script>
+
+   <script type="text/javascript">
+
+        //const margin = { left: 50, right: 50, top: 50, bottom: 50 };
+        //const height = 800;
+        const ft = {};
+        ft.margin = { left: 50, right: 50, top: 50, bottom: 50 };
+
+        const elementWidth = 40;
+        const slotHeight = 40;
+
+        const yearLength = 10;
+        const letterWidth = 9;
+        const spacingV = 20;
+        const spacingH = 20;
+        const minNodeWUnits = 3;
+      //  const nodeHDist = 20;
+
+        images = [];
+        {% for key, image in images%}
+            images[{{key}}] = '{{ image |imagine_filter('squared_thumbnail_small')}}';
+        {% endfor %}
+       // const height = 500;
+
+
+        nodes = {{ nodes |raw}};//nodes.slice(0, 200);
+        links = {{ links |raw}};
+       // books = {{ books |raw}};p
+        setCanvasSize();
+        createTimeline();
+
+        $(window).on("resize", function () { resizeSvg();});//.trigger("resize");
+
+        flyToPosition(-2000);
+
+        function onLinkClicked(a){
+            refreshPerson(a.personId);
+
+         //   $(".sankey-links.selected").removeClass("selected");
+            $(".sankey-links.not-selected").removeClass("not-selected");
+            $(".elements.not-selected").removeClass("not-selected");
+
+            d3.selectAll(".sankey-links")
+                .filter(function(d)
+                {
+                    return !d3.select(this).classed("person-" +a.personId);
+                })
+            .classed("not-selected", true);
+
+            d3.selectAll(".elements")
+                .filter(function(d)
+                {
+                    return !d3.select(this).classed("person-" +a.personId);
+                })
+                .classed("not-selected", true);
+        }
+
+        function onNodeClicked(a){
+
+
+            //if(a.id < 10000) {
+                refreshEvent(a.id);
+           /* } else {
+                refreshPerson(a.id % 10000);
+            };*/
+
+            $(".elements.selected").removeClass("selected");
+            $(".sankey-links.selected").removeClass("selected");
+
+            $('#node' + a.id + '.elements').addClass("selected");
+
+        }
+
+        //resizeSvg();
+        //    window.addEventListener("resize", resizeSvg);
+        // object to hold dimentions of window
+
+        // call to set canvas size based on window dimentions
+        //setCanvasSize();
+
+
+
+        // set the canvas width and height based on window dimensions
+        function setCanvasSize() {
+            ft.height =  window.innerHeight - $("#navbar").height() - $(".footer").height() - 100;
+            ft.width = $("#canvas-svg").width();
+        }
+
+        // resize function - called when window is resized
+        function resizeSvg() {
+            // call to set canvas size based on window dimensions
+            setCanvasSize();
+            // select rect and set its width and height to new dimensions
+            d3.selectAll("svg")
+                .transition()
+                .ease(d3.easeElastic)
+                .attr("width", ft.width/* - ft.margin.left - ft.margin.right*/)
+                .attr("height", ft.height /*- ft.margin.top - ft.margin.bottom*/)
+
+        }
+
+   </script>
+
+{% endblock %}

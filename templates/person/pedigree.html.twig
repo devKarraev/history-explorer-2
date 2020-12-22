@@ -1,0 +1,142 @@
+{% extends 'content_base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/d3.css') }}">
+    <style>
+        .fa.disabled {
+            opacity: 0.6;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}Family Tree{% endblock %}
+
+{% block content_container %}
+<div id="infoContainer" class="container" style="display:none">
+    <div class="row">
+        <div class="col-sm-2 p-3 sticker">
+            <button onclick="$('#infoContainer').hide()" class="btn btn-danger pull-right" style="box-shadow:none">X</button>
+            <div id="personInfo" data-person_info-url="{{ person_info_url }}"></div>
+        </div>
+    </div>
+</div>
+<div class="fixed">
+    <input class="m-3" id="search_name" data-autocomplete-url = "{{ path('person_utility_names') }}"type="text" name="submit_search" placeholder="Find Name, e.g. 'David'"><br>
+    <span onclick="toggleFolks()"><i id="show_folks" class='fa fa-group fa-2x m-1'></i></span><br>
+    <span onclick="toggleBooks()"><i id="show_books" class='fa fa-book fa-2x m-1'></i></span>
+</div>
+
+{% endblock %}
+
+{% block content_body %}
+    <!-- This will serve as a container for our chart. This does not have to be a div, and can in fact, just be the body if you want. -->
+
+    <div class="container" id="canvas-svg">
+        <div id="chart" class="chart"></div>
+    </div>
+{#}{ dump(nodes) }#}
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/autocomplete.js/0/autocomplete.jquery.min.js"></script>
+    <script src="{{ asset('js/algolia-autocomplete.js') }}"></script>
+    <script src="{{ asset('js/d3.v5.min.js')}}"></script>
+    <script src="{{ asset('js/person_widget.js') }}"></script>
+    <script src="{{ asset('js/d3-axis.min.js')}}"></script>
+    {#   <script src="{{ asset('js/d3checkbox.js')}}"></script>
+    <script src="https://d3js.org/d3.v3.min.js"></script>#}
+    <script type="text/javascript" src="{{ asset('js/pedigree.js') }}"></script>
+
+<script src="https://unpkg.com/d3-array@1"></script>
+<script src="https://unpkg.com/d3-collection@1"></script>
+<script src="https://unpkg.com/d3-path@1"></script>
+<script src="https://unpkg.com/d3-shape@1"></script>
+<script src="https://unpkg.com/d3-sankey@0"></script>
+
+   <script type="text/javascript">
+
+        const ft = {};
+
+        ft.margin = { left: 0, right: 0, top: 50, bottom: 50 };
+        ft.padding = { left: 10, right: 10, top: 10, bottom: 10 };
+
+
+
+        console.log(ft.height, $(".footer").height());
+
+        ft.bookHeight = 18;
+        const elementWidth = 40;
+        const maxHeight = 40;
+        const yearLength = 3;
+
+        var yearLengths = {};
+        yearLengths[-4200] = 3;
+        yearLengths[-2000] = 30;
+        yearLengths[-1000] = 3;
+
+        const letterWidth = 9;
+        const spacing = 10;
+
+        ft.images = [];
+        {% for key, image in images%}
+            ft.images[{{key}}] = '{{ image |imagine_filter('squared_thumbnail_small')}}';
+        {% endfor %}
+       // const height = 500;
+       //const dummy_icon = '
+
+        ft.nodes = {{ nodes |raw}};//nodes.slice(0, 200);
+        ft.links = {{ links |raw}};
+        ft.books = {{ books |raw}};
+
+        //var active = d3.select(null);
+      //  var canvas = {};
+
+        $(window).on("resize", function () { resizeSvg();});//.trigger("resize");
+        setCanvasSize();
+        createTree();
+        //resizeSvg();
+    //    window.addEventListener("resize", resizeSvg);
+        // object to hold dimentions of window
+
+        // call to set canvas size based on window dimentions
+        //setCanvasSize();
+
+
+
+        // set the canvas width and height based on window dimensions
+        function setCanvasSize() {
+            /*canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;// $("#content").height();*/
+            ft.height =  window.innerHeight - $("#navbar").height() - $(".footer").height() - 100;
+            ft.width = $("#canvas-svg").width();
+        }
+
+        // resize function - called when window is resized
+        function resizeSvg() {
+            // call to set canvas size based on window dimensions
+            setCanvasSize();
+console.log("resize");
+            // select svg and set its width and height to new dimensions
+      /*      d3.select("#canvas-svg")
+                .attr("width", canvas.width)
+                .attr("height", canvas.height)
+*/
+            // select rect and set its width and height to new dimensions
+            d3.selectAll("svg")
+                .transition()
+                .ease(d3.easeElastic)
+                .attr("width", ft.width/* - ft.margin.left - ft.margin.right*/)
+                .attr("height", ft.height /*- ft.margin.top - ft.margin.bottom*/)
+
+          /*  d3.select("#timeline")
+
+                .attr("y", ft.height - 50)*/
+
+        }
+
+    </script>
+
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends 'content_base.html.twig' %}
+
+{% block content_body %}
+
+                <div class="main-article mb-5 pb-3">
+                    <!--img src="{{ asset('images/histo-nav.jpg') }}" alt="persons"-->
+                    <h1 class="text-center mt-2">Person List</h1>
+                </div>
+
+                {{ knp_pagination_render(pagination) }}
+                <table class="table table-striped advanced-table">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>{{knp_pagination_sortable(pagination, 'Name', 'p.name') }}</th>
+                        <th>{{knp_pagination_sortable(pagination, 'Born', 'p.bornEstimated') }}</th>
+                        <th>Number of Children</th>
+                        <th>{{knp_pagination_sortable(pagination, 'Approved', 'p.approved') }}</th>
+                        <th>&nbsp</th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th>
+                        <form>
+                            <div class="input-group mb-3">
+                                <input type="text"
+                                       name="q"
+                                       class="form-control"
+                                       placeholder="Search..."
+                                       value="{{ app.request.query.get('q') }}"
+                                >
+                                <div class="input-group-append">
+                                    <button type="submit"
+                                            class="btn btn-outline-secondary">
+                                        <span class="fa fa-filter"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        </th>
+                        <th></th>
+                        <th></th>
+                        <th>
+                            <a href="{{ path('add_person') }}" class="btn btn-primary pull-right">
+                                Create <span class="fa fa-plus-circle"></span>
+                            </a>
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {% for person in pagination %}
+                            {% if person.showInList %}
+                                {% if person.hasUpdate %}
+                                    <tr class="tobeapproved">
+                                {% else %}
+                                    <tr>
+                                {% endif %}
+
+                                <td>
+                                    <a href="{{ path('person_show', {id: person.id}) }}">
+                                        <img class="article-img" src="{{ person.image | imagine_filter('squared_thumbnail_small') }}">
+                                    </a>
+                                </td>
+                                <td>
+                                    <div class="d-inline-block pl-3 align-middle">
+                                        {% if person.getUpdatedName %}
+                                            <span><s>{{ person.name }}</s><br>{{ person.getUpdatedName }}</span>
+                                        {% else %}
+                                            <span>{{ person.name }}</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-inline-block pl-3 align-middle">
+                                        <span>{{ person.born(true) }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="align-middle">
+                                        <span>{{ person.children|length }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="{{path('person_edit', {
+                                        id: person.id
+                                        })
+                                    }}"><span class="fa fa-pencil"></span>
+                                    </a>
+                                    {% if is_granted('ROLE_ACCEPT_CHANGES') and not person.approved %}
+                                        <a href="{{path('person_accept', {
+                                            id: person.id
+                                        })
+                                        }}">
+                                            <span class="fa fa-check-circle alert-success"></span>
+                                        </a>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% for change in person.userChanges(app.user)  %}
+                                        {% if change.modificationType != "edit_init" %}
+                                            <a href="{{path('change_deny', {
+                                                id: change.id
+                                            })
+                                            }}">
+                                                <span class="fa fa-ban alert-danger"></span>
+                                            </a><br>
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                {% if is_granted('ROLE_ACCEPT_CHANGES') %}
+                                    {% for change in person.changes  %}
+                                            {% if change.modificationType != "edit_init" %}
+                                                <a href="{{path('change_accept', {
+                                                    id: change.id
+                                                })
+                                                }}">
+                                                    <span class="fa fa-check alert-success"></span>
+                                                </a><br>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {{ knp_pagination_render(pagination) }}
+
+{% endblock %}

@@ -1,0 +1,78 @@
+{% set refTypes = {
+    test : 'test',
+} %}
+
+{% set refIndex = 0 %}
+     <div class="row">
+         <div class="col-sm-12">
+             <h3><i class="pr-3 fa fa-bookmark"></i>{{ location.referenceList|length }} Reference(s)</h3>
+             <table class="table table-striped">
+                 <thead>
+                 <tr>
+                     <th>Url or Bible quotation</th>
+                     <th>Proves type</th>
+                     <th>Action</th>
+                 </tr>
+                 </thead>
+                 <tbody>
+                 {% if location.referenceList is defined %}
+                     {% for key, value in refTypes %}
+                         <div id="{{ refIndex }}">
+                             {% for locationreference in location.referenceList(key) %}
+                                 <tr>
+                                     <td>
+                                         <i class="pr-3 fa fa-external-link"></i>
+                                         <div class="comment-container d-inline-block pl-3 align-top">
+                                             <a href="{{ locationreference.reference.generateBibleServerUrl }}",
+                                                onclick="window.open('{{ locationreference.reference.generateBibleServerUrl }}',
+                                                        'newwindow',
+                                                        'width=400,height=250');
+                                                        return false;"
+                                             > {{ locationreference.reference }}
+                                             </a>
+                                         </div>
+
+                                     </td>
+                                     <td>
+                                         {{ value }}
+                                     </td>
+                                     <td>
+                                         <a href="{{ path('location_remove_reference', {'location' : location.id, 'id' : locationreference.id}) }}" class='btn btn-danger btn-xs' title='Entfernen' data-confirm='<h3>Soll diese Referenz wirklich enfernt werden?</h3>'>
+                                             <span class="glyphicon glyphicon-remove"></span>&nbsp;Referenz entfernen</a>
+                                     </td>
+                                 </tr>
+                             {% else %}
+
+                             {% endfor %}
+                         </div>
+                         {% set refIndex = refIndex +1 %}
+                     {% endfor %}
+                 {% endif %}
+                 <form name="addef" method="post" action="{{path('location_add_reference', {'location': location.id}) }}" class="inline">
+                    <tr>
+                         <td>
+                             <input id="referenceinput" type="text" name="submit_param_in" placeholder="e.g. '1. Mose' or an url" class="form-control name_list" data-autocomplete-url = "{{ path('books_utility') }}" data-chapters-url = "{{ path('books_utility_chapters') }}"/>
+                         </td>
+                         <td>
+                             <select name="reftype" class="form-control">
+                                 {% for key, value in refTypes %}
+                                    <option value="{{ key }}">{{ value }}</option>
+                                 {% endfor %}
+                             </select>
+                         </td>
+                         {#<td>
+                             <a id="add_ref_btn" href="{{path('add_reference', {'person': person.id, 'data': 'test' }) }}" class='btn btn-success btn-xs disabled' title='Hinzufügen'>
+                                 <span class="glyphicon glyphicon-add"></span>Add Reference</a>
+                         </td>#}
+                         <td>
+                             <input type="hidden" id="submit_param" name="submit_param" value="">
+                             <button disabled="disabled" id="add_ref_btn" type="submit" class="btn btn-success btn-xs">
+                                 Add Reference
+                             </button>
+                         </td>
+                        </tr>
+                    </form>
+                 </tbody>
+             </table>
+         </div>
+     </div>

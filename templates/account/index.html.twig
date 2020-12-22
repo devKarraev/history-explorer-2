@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Manage Account!{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+
+    <link rel="stylesheet" href="{{ asset('css/account.css') }}">
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <div class="row user-menu-container square">
+            <div class="col-md-12 user-details">
+                <div class="row spacepurplebg white">
+                    <div class="col-md-2 no-pad">
+                        <div class="user-image">
+                            <img src="{{ app.user.avatarUrl(200) }}" class="img-responsive thumbnail">
+                        </div>
+                    </div>
+                    <div class="col-md-10 no-pad">
+                        <div class="user-pad">
+                            <h3>Welcome back, {{ app.user.firstName ? app.user.firstName : ' unknown'  }}</h3>
+                            <a class="btn btn-labeled btn-info" href="{{ path('app_account_edit') }}">
+                                <span class="btn-label"><i class="fa fa-pencil"></i></span>Update
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="row overview">
+                    <div class="col-md-4 user-pad text-center">
+                        <h3>Persons created</h3>
+                        <h4>{{app.user.personCount}}</h4>
+                    </div>
+                    <div class="col-md-4 user-pad text-center">
+                        <h3>Events created</h3>
+                        <h4>{{app.user.personCount}}</h4>
+                    </div>
+                    <div class="col-md-4 user-pad text-center">
+                        <h3>Locations created</h3>
+                        <h4>{{app.user.locationCount}}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

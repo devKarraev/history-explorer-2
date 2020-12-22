@@ -1,0 +1,821 @@
+{% extends 'content_base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/d3.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/d3.slider.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/timemap.css') }}">
+    <!--link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"-->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.3/leaflet.css" />
+    <!--link rel="stylesheet" href="d3.slider.css" /-->
+    <style>
+
+        #map {
+            width: 100%;
+            height: 500px;
+        }
+        .time-slider {
+            fill: blanchedalmond;
+        }
+        .leaflet-pane > svg {
+            pointer-events: auto ;
+        }
+
+
+        .popup-fixed {
+            font: 16px sans-serif;
+            /*position: fixed;
+            top: auto;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            transform: none !important;
+            margin: 0;
+            border-radius: 0;*/
+        }
+
+        .popup-fixed.leaflet-popup-tip-container {
+            display: none;
+        }
+        .popup-fixed.leaflet-popup-content-wrapper {
+            border-radius: 0;
+        }
+
+        .fixed {
+            transform: none!important;
+        }
+
+    </style>
+{% endblock %}
+
+{% block title %}Timemap{% endblock %}
+
+{% block content_container %}
+    <div id="infoContainer" class="container" style="display:none">
+        <div class="row">
+            <div class="col-sm-2 p-3 sticker">
+                <button onclick="$('#infoContainer').hide()" class="btn btn-danger pull-right" style="box-shadow:none">X</button>
+                <div id="info" data-event_info-url="{{ event_info_url }}" data-person_info-url="{{ person_info_url }}"></div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content_body %}
+    <div class="container" >
+        <div class="col-sm-2 p-3 fixed">
+            <input id="search_name" type="text" name="submit_search" placeholder="Find Event, e.g. 'David'">
+        </div>
+        <div  class="col-sm-3 p-3 eventinfo">
+            <table id="eventinfotable" class="table table-striped">
+                <col style="width:90px">
+                <col style="width:max-content">
+                <col style="width:30px">
+                <thead>
+                    <tr>
+                        <td><i class="pr-3 fa fa-clock-o"></i></td>
+                        <td colspan="2" ><b id="eventinfodate"></b>
+                        </td>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-sm-12 p-3">
+            <div id="map"></div>
+            <div id="slider" class="mt-3"></div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.3/leaflet.js"></script>
+
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <!--script src="https://unpkg.com/d3-simple-slider"></script-->
+    <script src="{{ asset('js/d3.slider.js') }}"></script>
+
+    <script type="text/javascript">
+
+    var p_iconsize = 40;
+    var p_images = [];
+    var e_images = [];
+    {% for key, image in personimages%}
+        p_images[{{key}}] = '{{ image |imagine_filter('squared_thumbnail_small')}}';
+    {% endfor %}
+
+    {% for key, image in eventimages%}
+        e_images[{{key}}] = '{{ image |imagine_filter('squared_thumbnail_small')}}';
+    {% endfor %}
+
+    var areadata =
+        {"type":"FeatureCollection","features":[
+        {"type":"Feature", "t0":-1000, "geometry":{"type":"Polygon","coordinates":[[[-87.359296,35.00118],[-85.606675,34.984749],[-85.431413,34.124869],[-85.184951,32.859696],[-85.069935,32.580372],[-84.960397,32.421541],[-85.004212,32.322956],[-84.889196,32.262709],[-85.058981,32.13674],[-85.053504,32.01077],[-85.141136,31.840985],[-85.042551,31.539753],[-85.113751,31.27686],[-85.004212,31.003013],[-85.497137,30.997536],[-87.600282,30.997536],[-87.633143,30.86609],[-87.408589,30.674397],[-87.446927,30.510088],[-87.37025,30.427934],[-87.518128,30.280057],[-87.655051,30.247195],[-87.90699,30.411504],[-87.934375,30.657966],[-88.011052,30.685351],[-88.10416,30.499135],[-88.137022,30.318396],[-88.394438,30.367688],[-88.471115,31.895754],[-88.241084,33.796253],[-88.098683,34.891641],[-88.202745,34.995703],[-87.359296,35.00118]
+                ]]}},
+        {"type":"Feature", "id":"02", "t0":0, "properties":{"name":"IS"}, "geometry": { "type": "Polygon", "coordinates": [ [ [36.39720284420197,32.54543665499107],[36.44484692705301,32.49008950229926],[37.38798014679741,31.45713928275928],[38.77228254679287,31.93607441943879],[38.84051287976031,33.77402523448576],[ 37.23376007813233,34.08954979177851],[36.06854692234289,33.91931385433418],[ 34.62377889551363,34.17350563400001],[36.39720284420197,32.54543665499107]
+                ]]}},
+
+            ]
+    };
+
+    var colours = d3.scaleOrdinal(d3.schemeCategory10);
+
+    var movingpoints = {{ persons|json_encode|raw }};
+    var eventdata = {{ events|json_encode|raw }};
+
+    var map;var info;
+    var margin = {top:0, right:50, bottom:0, left:50},
+        sliderHeight = 80,
+
+        width =$("#map").width(),//= 800 - margin.left - margin.right,
+        height = 800 - margin.top - margin.bottom - sliderHeight;
+
+    var yearLength = 0.4;
+    var areas, persons, timelocation, timelocationInfo, picons;/*, plabels*/;//, locationlabels;
+    //var picon_locations = [];
+    var currentTime = -3000;
+    var xScale;
+    var svgSlider;
+    var clickArea;
+    var transform = d3.geoTransform({point: projectPoint});
+    var path = d3.geoPath().projection(transform);
+
+    var iconsize;
+    var selectedPerson = null;
+    var x_zoom;
+
+    addLmaps();
+   // var svg = d3.select(map.getPanes().overlayPane).append("svg");
+    addSlider();
+    drawFeatures();
+    updateTimeData();
+
+    function addSlider() {
+
+        x_zoom = d3
+            .zoom()
+            .scaleExtent([0.15, 100])
+            .on("zoom", x_zoomed);
+
+        svgSlider = d3
+            .select("#slider")
+            .append("svg")
+            .attr("preserveAspectRatio", "xMinYMin meet")
+            .attr("viewBox", "0 0 "+ width+" " +sliderHeight)
+            .call(x_zoom);
+
+        xScale = d3
+            .scaleLinear()
+            .range([0, 4200])
+            .domain([-4000, 200])
+        //    .clamp(true)
+        //    ;
+        xScale.nice();
+
+        var xAxis = d3.axisBottom(xScale)
+            .ticks(50)
+            .tickSize(sliderHeight/4)
+            .tickPadding(16);
+
+        svgSlider.append("rect")
+            .attr("x", 0)
+            .attr("y",  0)
+            .attr("width", width)
+            .attr("height", sliderHeight)
+            .attr("class", "time-slider");
+
+        var gSlider = svgSlider.append("g")
+            .attr("class", "axis axis--x")
+            .call(xAxis);
+
+        clickArea = d3.select('.time-slider').node();
+
+        const verticalLine = svgSlider.append("line")
+            .style("stroke", "red")  // colour the line
+            .attr("x1", clickArea.attributes.width.value / 2)     // x position of the first end of the line
+            .attr("y1", 0)      // y position of the first end of the line
+            .attr("x2", clickArea.attributes.width.value / 2)     // x position of the second end of the line
+            .attr("y2", sliderHeight);
+
+        setYear(-2000);
+
+        function setYear(year) {
+            currentTime = year;
+            flyToPosition(year, 0);
+        }
+
+        function x_zoomed() {
+
+            const transform = d3.event.transform;
+        //    console.log(d3.event.type, transform.x, transform.k, transform.x*transform.k, transform.rescaleX(xScale));
+            gSlider.call(xAxis.scale(transform.rescaleX(xScale)));
+
+            var pos = clickArea.attributes.width.value / 2;
+            currentTime = xScale.invert((-transform.x +pos) / transform.k);
+            updateTimeData();
+        }
+    }
+
+    function flyToPosition(year, duration = 2000) {
+
+        var pos = clickArea.attributes.width.value / 2;
+        //let y = xScale.invert(year);
+        let x = xScale(year);
+        svgSlider
+            .transition()
+            .duration(duration)
+            .call(
+            x_zoom.transform,
+            d3.zoomIdentity.translate(-x+pos, 0)
+        ); // updated for d3 v4
+
+    }
+
+    $(window).on("resize", function () { $("#map").height($(window).height()*0.65); map.invalidateSize(); }).trigger("resize");
+
+    function addLmaps() {
+
+        map = L.map('map').setView([32.702053　, 32.15448379999998], 5);
+
+        var Esri_World_Imagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            interactive: true,
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri',
+            maxZoom: 17
+        });
+        Esri_World_Imagery.addTo(map);
+
+        L.svg({ interactive: true }).addTo(map);
+
+      /*  var Stamen_Terrain = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}{r}.{ext}', {
+            attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            subdomains: 'abcd',
+            minZoom: 0,
+            maxZoom: 18,
+            ext: 'png'
+        });
+        Stamen_Terrain.addTo(map);*/
+
+        info = L.control();
+        info.onAdd = function (map) {
+            this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+            this.update();
+            return this._div;
+        };
+
+// method that we will use to update the control based on feature properties passed
+        info.update = function (props) {
+
+            {% if is_granted('ROLE_EDIT_ENTITY') %}
+                var editUrl = '';
+            {% endif %}
+                var infoUrl = '';
+            if(props) {
+
+                infoUrl = '{{ path("location_show", {'id': 'location_id'})|escape('js') }}';
+                infoUrl = infoUrl.replace("location_id", props.id);
+                {% if is_granted('ROLE_EDIT_ENTITY') %}
+                editUrl = '{{ path("location_edit", {'id': 'location_id'})|escape('js') }}';
+                editUrl = editUrl.replace("location_id", props.id);
+                {% endif %}
+            }
+
+            this._div.innerHTML =    (props ?
+                'Tracking <b>' + props.name + '</b> <br /><a href='+infoUrl+'><span class="fa fa-eye"></span></a>'
+                    {% if is_granted('ROLE_EDIT_ENTITY') %}
+                + '<a href='+editUrl+'><span class="fa fa-pencil"></span></a>'
+                    {% endif %}
+                : '');
+        };
+
+        info.addTo(map);
+
+    }
+
+    function projectPoint(x, y) {
+        var point = map.latLngToLayerPoint(new L.LatLng(y, x));
+        this.stream.point(point.x, point.y);
+    }
+
+    function getCurrentCoordinate(d, pname) {
+
+        var lastIndex = 0;
+
+        var l = d.length;
+
+       var staysAfterLatEvent = 0;
+       if(l <= 0 || +d[0].t > currentTime || +d[l-1].t + staysAfterLatEvent < currentTime )
+            return null;
+
+        if(d[l-1].t < currentTime) {
+            console.log("<<<");
+            return [d[l-1].c[0],d[l-1].c[1]];
+        }
+
+        for(var i = 0;i<d.length;i++) {
+            if(d[i].t >= currentTime)
+                break;
+            lastIndex = i;
+        }
+
+        var rt = (+d[lastIndex+1].t - currentTime) / (+d[lastIndex+1].t -d[lastIndex].t) ;
+        var dx = +d[lastIndex+1].c[0] + rt * (-d[lastIndex+1].c[0] + d[lastIndex].c[0]);
+        var dy = +d[lastIndex+1].c[1] +  rt * (-d[lastIndex+1].c[1] + d[lastIndex].c[1]);
+
+        //if(name === "Abimelech")
+        {
+          //  console.log(d);
+       //     console.log(currentTime);
+        }
+
+        return [dx,dy];
+    }
+
+    function drawFeatures(data) {
+
+        let iconsize = map.getZoom() * 4 ;
+        var svg = d3.select("#map").select("svg");
+
+   /*     svg.append("g").append("rect")
+            .classed("fixed", true)
+            .attr("x", 200)
+            .attr("y", 200)
+            .attr("width", 100)
+            .attr("height", 50 )
+            .attr("stroke", "#000")
+            .style("fill", function (d) {
+                return "#AAAAFF";
+            });*/
+
+       /* svg.append("g").append("svg:image")
+
+            //  .attr("class", "rounded-circle")
+            .attr("x", 120)
+            .attr("y", 200)
+            .attr("xlink:href", function (d) {
+                return "http://simpleicon.com/wp-content/uploads/smile.png";
+            })
+            .attr("width", 40)
+            .attr("height", 40);*/
+
+          //  .style("display","block");
+        /* var tooltip = svg/*d3.select(".leaflet-pane.leaflet-overlay-pane").append("div")* /
+            .append("rect")
+            .attr("width", 100)
+            .attr("height", 30)
+           /* .attr("x", 0)
+            .attr("y", 0);*/
+            /*.style("position", "absolute")
+             .attr(
+                 "transform",
+                 "translate(" + margin.left + "," + margin.top + ")"
+             )*/
+           /* .style("z-index", "10")
+            .style("color", "white")
+            .style("padding", "8px")
+            .style("background-color", "rgba(120, 120, 120, 0.75)")
+            .style("border-radius", "6px")
+            .style("font", "12px sans-serif")
+            .text("tooltip");*/
+
+        movingpoints.forEach(function(d) {
+         //   console.log(d.name);
+            d.c = getCurrentCoordinate(d.data, d.name);
+        });
+
+
+       //map.createPane('static');
+      // var staticsvg = d3.select(".leaflet-static-pane").append("svg");
+       // var staticsvg = d3.select("#map").append("svg");
+      //  var staticsvg = d3.select(".leaflet-control-zoom-out").append("svg");
+
+      //  var svg = d3.select(map.getPanes().overlayPane).append("svg");
+     //   console.log(map.getPanes().overlayPane);
+        areas = svg.selectAll("path")
+            .data(areadata.features)
+            .enter()
+            .append("path")
+            .attr("stroke", "gray")
+            .attr("fill", "yellow")
+            .attr("fill-opacity", 0.6);
+
+       /* var tooltip =  svg
+            //.append("g")
+            .append("rect")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", 100)
+            .attr("height", 30)
+            .attr(
+                "transform",
+                "translate(" + margin.left + "," + margin.top + ")"
+            );*/
+
+        timelocation = svg.selectAll("circle")
+            .data(eventdata.reverse())
+            .enter()
+            .append("g");
+
+        timelocation
+            .append("circle")
+            .attr("id", function(d) {
+                return "location-"+d.id;
+            })
+            .attr("class", "location")
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", 6)
+            .attr("stroke", "#000")
+            .attr("stroke-width", 2)
+            .style("fill", function (d, i) {
+                 return colours(i);
+            })
+            .on("click", function (d) {
+                d3.select("#eventinfotable").selectAll("tr").classed("selected", false);
+                d3.select("#row-"+d.id).classed("selected", true);
+                d3.select(this)
+                    .transition().duration(200)
+                    .attr("transform", "scale(2,2)")
+                    .transition().duration(500)
+                    .attr("transform", "scale(1,1)")
+                highlightEventPersons(d);
+            });
+
+        timelocationLabel =
+            timelocation.append("g");
+
+        timelocationLabel
+            .append("rect")
+            .attr("width",0 )
+            .attr("height", 0 )
+            .attr("x", 0)
+            .attr("y", 8)
+            .attr("fill", "#AAAAAA")
+            .attr("opacity", 0.5)
+
+        timelocationLabel
+            .append("text")
+            .attr("x", +2)
+            .attr("y", + 19)
+            .attr("dy", 0.1)
+            .attr("fill", function (d, i) {
+                return "#000";
+            })
+            .attr("text-anchor", "left") // middle
+            .text(function (d) {
+                return d.name;
+            });
+
+       /* timelocation.attr("transform", function (d) {
+            var t = map.latLngToLayerPoint(new L.LatLng(d.c[0], d.c[1]));
+            return "translate(" + t.x + "," + t.y + ")";
+        });*/
+/*
+        timelocationInfo = staticsvg.selectAll("locationInfo")
+            .data(eventdata)
+            .enter()
+            .append("g")
+            .attr("class", "popup-fixed")
+            .attr("x", 0)
+            .attr("y", 0)
+
+
+        timelocationInfo.append("rect")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", 120)
+            .attr("height", 20 )
+            .attr("stroke", "#000")
+            .style("fill", function (d) {
+                return "#AAAAFF";
+            })
+
+
+        timelocationInfo
+            .append("text")
+            .attr("x", 12)
+            .attr("y", 15)
+            .attr("dy", 0.1)
+            .attr("text-anchor", "start")
+            .text(function (d) {
+                return d.name;
+            });
+*/
+      //  timelocationLabel.selectAll("text").call(wrap, 90);
+        timelocationLabel.selectAll('rect')
+            .attr("width", function(d) {return this.parentNode.getBBox().width+2;})
+            .attr("height", function(d) {return this.parentNode.getBBox().height+2;})
+            //.attr("x", function(d) {return -0.5 * this.parentNode.getBBox().width ;});
+
+        persons = svg.selectAll("persons")
+            .data(movingpoints)
+            .enter()
+            .append("g");
+
+
+        var defs = svg.append("defs").attr("id", "imgdefs")
+        var circlepattern = defs.append("pattern")
+            .attr("id", "circlepattern")
+            .attr("height", 1)
+            .attr("width", 1)
+            .attr("x", "0")
+            .attr("y", "0");
+
+        persons.each(function (d) {
+            circlepattern.append("g").append("svg:image")
+                .attr("id", function () {
+                    return getCircleImageID(d.id);
+                })
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("height", iconsize)
+                .attr("width", iconsize)
+                .attr('xlink:href', p_images[d.id])
+
+        });
+
+        /*persons
+            .append("circle")
+            .attr("id", function (d) {
+                return "person-circle-"+d.id;
+            })
+            .attr("r", 25)
+            .attr("cx", 25)
+            .attr("cy", 25)
+
+            .style("fill", function (d) {
+                console.log(d.id);
+                return "url(#" + getCircleImageID(d.id) +")";
+
+            });
+*/
+
+        picons = persons
+            .append("image")
+            .attr("id", function (d) {
+                return getCircleImageID(d.id);
+            })
+            .attr("class", "icons")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("xlink:href", function (d) {
+                return p_images[d.id];
+            })
+            .attr("width", iconsize)
+            .style("display","block")
+            .on("click", function (d) {
+
+                /*var selected =  d3.select("#location-"+d);*/
+                selectedPerson = d;
+               // let data = this.data();
+
+                info.update(d);
+
+                d3.select(this)
+                    .transition().duration(200)
+                    .attr("transform", "scale(2,2)")
+                    .transition().duration(500)
+                    .attr("transform", "scale(1,1)")
+            });
+
+        personLabels = persons
+            .append("g")
+            .attr("x", +iconsize/2)
+            .attr("y", iconsize - 10)
+
+        personLabels
+            .append("rect")
+            .attr("width", 0)//p_iconsize + 2*5 )
+            //.attr("height", 12 )
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("fill", "#666666")
+            .attr("opacity", 0.8)
+
+        personLabels
+            .append("text")
+            .attr("x", +iconsize/2)
+            .attr("y", iconsize + 10)
+            .attr("fill", function (d) {
+                return d.gender === "w" ? "red" : "#AADDFF";
+            })
+            .attr("text-anchor", "middle")
+            .text(function (d) {
+                return d.name;
+            });
+
+        personLabels.selectAll('rect')
+            .attr("width", function(d) {return this.parentNode.getBBox().width+2;})
+            .attr("height", function(d) {return this.parentNode.getBBox().height+2;})
+            .attr("x", function(d) { return +iconsize/2 - this.parentNode.getBBox().width/2;})
+
+        map.on("moveend", updatePositions);
+        map.on("dragend", onDragend)
+        //map.on("click", onDragend)
+        //updateTimeData();
+        updatePositions();
+    }
+
+    function getCircleImageID(id) {
+        return "circle-" + id;
+    }
+
+    function getOpacity(d) {
+        return Math.max(0,Math.min(1, 2.0 * (+d.t + 100.0 - currentTime) / 100.0))
+    }
+
+    function onDragend() {
+        selectedPerson=null;
+        info.update();
+    }
+
+    function updatePositions() {
+
+        areas.attr("d", path);
+        iconsize = map.getZoom() * 4 ;
+
+        timelocation.attr("transform", function (d) {
+            var t = map.latLngToLayerPoint(new L.LatLng(d.c[0], d.c[1]));
+            return "translate(" + t.x + "," + t.y + ")";
+        });
+
+
+        distributePersonIcons();
+
+        picons
+            .filter(function(d) { return d.c !== null })
+            .attr("width", iconsize);
+
+        personLabels.selectAll('rect')
+            .attr("x", function(d) { return +iconsize/2 - this.parentNode.getBBox().width/2;})
+            .attr("y", function(d) { return +iconsize ;});
+
+        personLabels.selectAll('text')
+            .attr("x", function(d) { return +iconsize/2 ;})
+            .attr("y", function(d) { return iconsize + 10;});
+
+    }
+
+    function updateTimeData() {
+
+        var before = 0;
+        timelocation
+            .style('visibility', function (d) {
+            return isVisible(d, 100) ? "visible" : "hidden";
+        })
+            .style('fill-opacity', function (d){
+                return getOpacity(d);
+        })
+        .style('stroke-opacity', function (d) {
+            return getOpacity(d);
+        });
+
+        let label_locations = [];
+        timelocationLabel
+
+            .filter(function(d) { return isVisible(d, 100); })
+            //.sort((a,b) => d3.descending(a.t, b.t))
+            .attr("transform", function (d) {
+
+                var t = map.latLngToLayerPoint(new L.LatLng(d.c[0], d.c[1]));
+                let x = t.x, y=t.y;
+                let h = 18;
+                let step = 0;
+
+                for(var l in label_locations) {
+
+                    var dx = label_locations[l][0]-x;
+                    var dy = label_locations[l][1]-y;
+
+
+                    if(Math.abs(dy) < 1) {
+
+                       // console.log(d.name, "<->", label_locations[l][3], dx, dy);
+                        step = label_locations[l][2]++;
+                        step++;
+                        y = y+step*h;
+                    }
+                }
+
+                label_locations.push([x, y, 0, d.name])
+                return "translate(" + 0 + "," + step*h + ")";
+            });
+
+
+
+        var slotsIndex = 0;
+        $('#eventinfotable tbody').empty();
+        $('#eventinfodate').text(Math.floor(currentTime));
+        eventdata.forEach(function (d, i) {
+           let t = d.t ;
+           if( +d.t  >= +currentTime -100.0 && +d.t <= +currentTime)// & t <=currentTime)
+           {
+               slotsIndex++
+               $('#eventinfotable').find('tbody:first').prepend('<tr id="row-'+d.id+'" style="opacity:'+getOpacity(d)+'" onclick="highlightPoint('+d.id+')">' +
+                   '<td>'+Math.floor(d.t)+'</td>' +
+                   '<td>'+d.name+'</td>' +
+                   '<td><svg width="30px" height="30px"><rect x="0" y="0" width="20" height="20" opacity="'+getOpacity(d)+'" fill="'+colours(i)+'"/></svg>' +
+                   '</td>' +
+                   '</tr>');
+
+
+           };
+     //      d.order = slotsIndex;
+        });
+
+        if( selectedPerson && selectedPerson.c) {
+            map.panTo(selectedPerson.c);
+        }
+
+        areas
+            .style('fill-opacity', function (d){
+                return (d.t0 < currentTime ? 0.6 : 0);
+            })
+            .style('stroke-opacity', function (d){
+                return (d.t0 < currentTime ? 1 : 0);
+        });
+
+        movingpoints.forEach(function (d) {
+            d.c = getCurrentCoordinate(d.data);
+        });
+
+        updatePositions();
+    }
+
+    function isVisible(d, tolerancePast) {
+        return +d.t +tolerancePast>= +currentTime && +d.t <=+currentTime;
+    }
+
+    function distributePersonIcons() {
+        picon_locations = [];
+        persons
+            .style('visibility', function (d) {
+                return d.c ? "visible" : "hidden";
+            })
+            .filter(function(d) { return d.c !== null })
+            .attr("transform", function (d) {
+                var t = map.latLngToLayerPoint(new L.LatLng(d.c[0], d.c[1]));
+
+                let x = t.x, y=t.y;
+                let init_r = iconsize +1;//p_iconsize+1;
+                let anglestep = 0;
+                for(var l in picon_locations) {
+
+                    var dx = picon_locations[l][0]-x;
+                    var dy = picon_locations[l][1]-y;
+
+                    // step around in 60° steps
+                    if(dx *dx + dy*dy < init_r*init_r) {
+
+                        anglestep = picon_locations[l][2];
+                        let r = (init_r+1) * (1 + Math.floor(anglestep / 6));
+                        var angle = anglestep*60/180*Math.PI;
+                        picon_locations[l][2]++;
+                        //      console.log(d.name, anglestep, r, angle, r * Math.cos(angle), r * Math.sin(angle));
+                        x = x+r * Math.cos(angle);
+                        y = y+r * Math.sin(angle);
+                    }
+                }
+                picon_locations.push([x, y, 0]);
+                return "translate(" + x + "," + y + ")";
+            });
+    }
+
+    function highlightEventPersons(d){
+        for(var p of d.p) {
+            highlightPerson(p);
+        }
+    }
+
+    function highlightPerson(id) {
+
+        var selected =  d3.select("#"+getCircleImageID(id));
+        selected
+            .transition().duration(200)
+            .attr("transform", "scale(2,2)")
+            .transition().duration(500)
+            .attr("transform", "scale(1,1)")
+        console.log(selected);
+    }
+
+    function highlightPoint(id) {
+
+        var selected =  d3.select("#location-"+id);
+          selected
+            .transition().duration(200)
+            .attr("transform", "scale(2,2)")
+            .transition().duration(500)
+            .attr("transform", "scale(1,1)")
+
+        let data = selected.data();
+        info.update(data[0].name);
+        map.panTo(data[0].c);
+
+    }
+
+
+</script>
+
+{% endblock %}

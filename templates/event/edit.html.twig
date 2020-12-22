@@ -1,0 +1,157 @@
+{% extends 'content_base.html.twig' %}
+
+{% block title %}
+
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/algolia-autocomplete.css') }}" >
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/min/dropzone.min.css" />
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/autocomplete.js/0/autocomplete.jquery.min.js"></script>
+    <script src="{{ asset('js/algolia-autocomplete.js') }}"></script>
+    <script src="{{ asset('js/dynamic_fields.js') }}"></script>
+    <script src="{{ asset('js/event_form.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/min/dropzone.min.js"></script>
+{% endblock %}
+
+{% block content_body %}
+
+    <h1>
+        <a href="{{ path('add_event')~'?before='~event.id }}" class="btn btn-primary"><span class="fa fa-plus-circle"></span></a>
+        {% if event.happenedAfter %}
+            <a href="{{ path('event_edit', {id: event.happenedAfter.id}) }}" class="pl-2 article-details fa fa-backward"></a>
+        {% endif %}
+        {{ event.name}}
+        {% if event.happenedBefore %}
+            <a href="{{ path('event_edit', {id: event.happenedBefore.id}) }}" class="pl-2 article-details fa fa-forward"></a>
+        {% endif %}
+        <a href="{{ path('add_event')~'?after='~event.id }} }}" class="btn btn-primary"><span class="fa fa-plus-circle"></span></a>
+    </h1>
+<hr>
+
+<div class="row">
+     <div class="col-sm-12">
+        {{ include('event/_form.html.twig', {
+            button_text: 'Update',
+            edit: true
+        }) }}
+    </div>
+
+</div>
+<div class="row">
+    <hr>
+    <div class="col-sm-12">
+        {{ include('event/_references.twig', {
+
+        }) }}
+    </div>
+</div>
+
+        <div class="col-sm-12">
+            <h3><i class="pr-3 fa fa-users"></i>
+            {% if event.participants|length == 0 %}
+                no participants
+            {% elseif event.participants|length == 1%}
+                one participant
+            {% else %}
+                {{ event.participants|length }} participants</h3>
+            {% endif %}
+
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Name</th>
+                        {% if is_granted('ROLE_EDIT_ENTITY') %}<th>Verbindung</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for participant in event.participants %}
+                        <tr>
+                            <td>
+                                <a href="{{ path('person_show', {id: participant.id}) }}">
+                                    <img class="comment-img rounded-circle" src="{{ participant.image|imagine_filter('squared_thumbnail_small') }}">
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{{ path('person_show', {id: participant.id}) }}">
+                                    <div class="comment-container d-inline-block pl-3 align-top">
+                                        <span class="comment"> {{ participant.name }}</span>
+                                    </div>
+                                </a>
+                            </td>
+                            {% if is_granted('ROLE_EDIT_ENTITY') %}
+                                <td>
+                                    <a href="{{path('event_remove_participant', {'event': event.id, 'participant' : participant.id}) }}" class='btn btn-danger btn-xs' title='Löschen' data-confirm='<h3>Soll diese Person wirklich als Kind enfernt?</h3>'>
+                                        <span class="glyphicon glyphicon-add"></span>&nbsp;Link lösen</a>
+                                </td>
+                            {% endif %}
+                        </tr>
+                    {% else %}
+                        {#Keine Teilnehmer#}
+                    {% endfor %}
+
+                    <tr>
+                        <td>
+                            <h3><i class="pr-3 fa fa-plus-circle"></i></h3>
+                        </td>
+                        <td>
+                            <h3>{{ addpersons|length }} Kandidaten</h3>
+                        </td>
+                        <td>
+                            <form>
+                            <div class="input-group mb-3">
+                                <input type="text"
+                                       name="q"
+                                       class="form-control"
+                                       placeholder="Add child.."
+                                       value="{{ app.request.query.get('q') }}"
+                                >
+                                <div class="input-group-append">
+                                    <button type="submit"
+                                            class="btn btn-outline-secondary">
+                                        <span class="fa fa-search"></span>
+                                    </button>
+                                </div>
+                            </div>
+                            </form>
+                        </td>
+                    </tr>
+
+                    {% for person in addpersons %}
+                        <tr>
+                            <td>
+                                <a href="{{ path('person_show', {id: person.id}) }}">
+                                    <img class="comment-img rounded-circle" src="{{ person.image | imagine_filter('squared_thumbnail_small') }}">
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{{ path('person_show', {id: person.id}) }}">
+                                    <div class="comment-container d-inline-block pl-3 align-top">
+                                        <span class="comment"> {{ person.name }}</span>
+                                        <!--p><a href="#">Reply</a></p-->
+                                    </div>
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{{path('event_add_participant', {'event': event.id, 'participant' : person.id}) }}" class='btn btn-success btn-xs' title='Hinzufügen' data-confirm='<h3>Soll diese Person wirklich als Kind hinzugefügt?</h3>'>
+                                    <span class="glyphicon glyphicon-add"></span>&nbsp;Teilnehmer hinzufügen</a>
+                            </td>
+                        </tr>
+                    {% else %}
+
+                    {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+{% endblock %}
+
+

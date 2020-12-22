@@ -1,0 +1,48 @@
+{{ form_start(locationForm) }}
+{% set refIndex = 0 %}
+{% set refTypes = [''] %}
+
+<table class="table table-striped">
+    <tr>
+        <td>
+            <div class="form-control">
+                {{ form_widget(locationForm.imageFile) }}
+                {% if location is defined %}
+                <img class="show-article-icon" src="{{  location.image|imagine_filter('squared_thumbnail_medium')  }}">
+               {% endif %}
+                <label for="location_form_imageFile" class="fa fa-pencil"></label>
+            </div>
+        </td>
+        <td>
+            {{ form_row(locationForm.type) }}
+        </td>
+    </tr>
+    <tr>
+        <td>
+            {{
+                form_row(locationForm.name)
+            }}
+        </td>
+        <td>
+            {{
+            form_row(locationForm.todayKnownAs)
+            }}
+        </td>
+    </tr>
+    <tr>
+        <td>
+            {{ form_row(locationForm.lat) }}
+        </td>
+        <td>
+            {{ form_row(locationForm.lon) }}
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            {{ form_row(locationForm.description) }}
+        </td>
+    </tr>
+</table>
+
+<button type="submit" class="btn btn-primary">{{ button_text }}</button>
+{{ form_end(locationForm)}}

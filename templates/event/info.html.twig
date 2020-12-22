@@ -1,0 +1,29 @@
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            {% if is_granted('ROLE_EDIT_ENTITY') %}
+                <a href="{{ path('event_edit', {id: event.id}) }}" class="ml-3 btn btn-primary pull-right">
+                    Edit <span class="fa fa-pencil-square"></span>
+                </a>
+            {% endif %}
+            <a href="{{ path('event_show', {id: event.id}) }}" class="btn btn-success pull-right">
+                Show<span class="fa fa-eye"></span>
+            </a>
+
+            <img class="comment-img" src="{{ event.image | imagine_filter('squared_thumbnail_small')}}">
+            <div class="show-article-title-container d-inline-block pl-3 align-middle">
+                <span class="show-article-title ">{{ event.name }}</span>
+                <span class="article-text"> {{  not event.year ? event.yearCalculated ~'(?)': event.yearCalculated }}</span>
+                <br>
+
+                {% if event.location.id is defined %}
+                    <span class="align-left article-details">
+                        <a href="{{ path('location_show', {id: event.location.id}) }}">
+                            <img class="article-author-img rounded-circle" src="{{ event.location.image| imagine_filter('squared_thumbnail_small') }}">{{ event.location.name}}
+                        </a>
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
