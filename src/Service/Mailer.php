@@ -28,6 +28,7 @@ class Mailer
     public function sendWelcomeMessage(User $user) : TemplatedEmail
     {
         $email = (new TemplatedEmail())
+            ->from($_ENV['MAILER_FROM'])
             ->to(new Address($user->getEmail(), $user->getFirstName()))
 
             ->subject('Registration....')
