@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -17,6 +18,35 @@ class UserRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, User::class);
+    }
+
+    /**
+     * Search for users table.
+     *
+     * @param User|null $user
+     * @param string|null $term
+     * @param bool $startsWith
+     *
+     * @return QueryBuilder
+     */
+    public function getWithSearchQueryBuilder(?User $user, ?string $term, bool $startsWith = false) :QueryBuilder
+    {
+        $qb = $this->createQueryBuilder('p');
+        if ($term){
+            if($startsWith) {
+                $qb->andWhere('p.email LIKE :term')
+                    ->setParameter('term', $term . '%');
+            } else {
+                $qb->andWhere('p.email LIKE :term')
+                    ->setParameter('term', '%' . $term . '%');
+            }
+
+        }
+
+        $qb->andWhere('p.id != :id')
+            ->setParameter('id', $user->getId());
+
+        return $qb->orderBy('p.email', 'ASC');
     }
 
     // /**
@@ -35,16 +65,6 @@ class UserRepository extends ServiceEntityRepository
         ;
     }
     */
-
-    public function findByNot($field, $value)
-    {
-        $qb = $this->createQueryBuilder('a');
-        $qb->where($qb->expr()->not($qb->expr()->eq('a.'.$field, '?1')));
-        $qb->setParameter(1, $value);
-
-        return $qb->getQuery()
-            ->getResult();
-    }
 
     /*
     public function findOneBySomeField($value): ?User

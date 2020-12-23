@@ -1,46 +1,66 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello AdminUsersController!{% endblock %}
-
 {% block body %}
 <div class="container">
     <div class="row">
         <div class="col-md-12">
-            <h1>Users list</h1>
-            {{ dump(users_list) }}
+            <h1></h1>
             <div class="show-article-container p-3 mt-2">
-                <form method="post" action="{{path('users_update_roles') }}">
+                <div class="main-article mb-5 pb-3">
+                    <h1 class="text-center mt-2">Users list</h1>
+                </div>
+                {{ knp_pagination_render(pagination) }}
                     <table class="table table-striped advanced-table">
                         <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Roles</th>
-                        </tr>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Roles</th>
+                                <th></th>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <th>
+                                    <form>
+                                        <div class="input-group mb-3">
+                                            <input type="text"
+                                                   name="q"
+                                                   class="form-control"
+                                                   placeholder="Search..."
+                                                   value="{{ app.request.query.get('q') }}"
+                                            >
+                                            <div class="input-group-append">
+                                                <button type="submit"
+                                                        class="btn btn-outline-secondary">
+                                                    <span class="fa fa-filter"></span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </th>
+                                <th></th>
+                                <th></th>
+                            </tr>
                         </thead>
                         <tbody>
-                            {% for user in users_list %}
-                                <tr>
-                                    <td>{{ user.firstName }}</td>
-                                    <td>{{ user.email }}</td>
-                                    <td>
-                                        <div>
-                                            <label for="{{ user.id }}_admin">Admin role</label>
-                                            <input type="checkbox" id="{{ user.id }}_admin" name="{{ user.id }}_admin" {% if 'ROLE_ADMIN' in user.roles %} checked {% endif %}>
-                                        </div>
-                                        <div>
-                                            <a href="{{ path('admin_users_edit', {id: user.id}) }}">edit</a>
-                                            <label for="{{ user.id }}_manager">Manager role</label>
-                                            <input type="checkbox" id="{{ user.id }}_manager" name="{{ user.id }}_manager" {% if 'ROLE_ACCEPT_CHANGES' in user.roles %} checked {% endif %}>
-                                        </div>
-                                    </td>
-
-                                </tr>
-                            {% endfor %}
+                        {% for user in pagination %}
+                            <tr>
+                                <td>{{ user.firstName }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    {% if 'ROLE_ADMIN' in user.roles %}<p>Admin role</p>{% endif %}
+                                    {% if 'ROLE_ACCEPT_CHANGES' in user.roles %}<p>Manager role</p>{% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ path('admin_users_edit', {id: user.id}) }}">
+                                        <span class="fa fa-pencil"></span>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
                         </tbody>
                     </table>
-                    <input type="submit">
-                </form>
+                {{ knp_pagination_render(pagination) }}
             </div>
         </div>
     </div>

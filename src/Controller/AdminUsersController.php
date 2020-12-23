@@ -3,43 +3,108 @@
 namespace App\Controller;
 
 use App\Repository\UserRepository;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 
+/**
+ * @IsGranted("ROLE_ADMIN")
+ */
 class AdminUsersController extends AbstractController
 {
     /**
-     * @Route("/admin/users", name="admin_users", methods={"GET"})
+     * @var UserRepository
      */
-    public function index(UserRepository $userRepository): Response
-    {
-        if (!$this->isGranted('ROLE_ADMIN')) {
-            return $this->redirectToRoute('app_homepage');
-        }
+    private $userRepository;
 
-        $usersList = $userRepository->findByNot('id', $this->getUser()->getId());
+    /**
+     * @var int
+     */
+    const PAGE_LIMIT = 20;
+
+    /**
+     * @var string
+     */
+    const ADMIN_ROLE = 'ROLE_ADMIN';
+
+    /**
+     * @var string
+     */
+    const MANAGER_ROLE = 'ROLE_ACCEPT_CHANGES';
+
+    /**
+     * AdminUsersController constructor.
+     *
+     * @param UserRepository $userRepository
+     */
+    public function __construct(UserRepository $userRepository)
+    {
+        $this->userRepository = $userRepository;
+    }
+
+    /**
+     * @Route("/admin/users/list", name="admin_users_list", methods={"GET"})
+     */
+    public function list(Request $request, PaginatorInterface $paginator): Response
+    {
+        $q = $request->query->get('q');
+        $queryBuilder = $this->userRepository->getWithSearchQueryBuilder($this->getUser(), $q);
+
+        $pagination = $paginator->paginate(
+            $queryBuilder,
+            $request->query->getInt('page', 1)/*page number*/,
+            self::PAGE_LIMIT/*limit per page*/
+        );
+
         return $this->render('admin_users/index.html.twig', [
-            'controller_name' => 'AdminUsersController',
-            'users_list' => $usersList
+            'pagination' => $pagination
         ]);
     }
 
     /**
-     * @Route("/admin/users/edit/{id}", name="admin_users_edit", methods={"GET"})
+     * @Route("/admin/users/{id}/edit", name="admin_users_edit", methods={"GET"})
      */
-    public function edit(Request $request)
+    public function edit(Request $request, $id)
     {
-        dd($request->get('id'));
+        $user = $this->userRepository->find($id);
+        return $this->render('admin_users/edit.html.twig', [
+            'user' => $user
+        ]);
     }
 
     /**
-     * @Route("/admin/users/update-roles", name="users_update_roles", methods={"POST"})
+     * @Route("/admin/users/{id}", name="admin_user_update", methods={"PATCH"})
      */
-    public function updateRoles(Request $request)
+    public function update(Request $request, $id)
     {
-        dd($request);
+        $newRoles = [
+            'admin'   => $request->get('admin'),
+            'manager' => $request->get('manager')
+        ];
+
+        $existsRoles = [
+            'admin'   => self::ADMIN_ROLE,
+            'manager' => self::MANAGER_ROLE
+        ];
+
+        $rolesToFlush = [];
+
+        foreach ($newRoles as $role => $roleValue) {
+            if ($roleValue == 1) {
+                array_push($rolesToFlush, $existsRoles[$role]);
+            }
+        }
+
+        $entityManager = $this->getDoctrine()->getManager();
+        $user = $this->userRepository->find($id);
+        $user->setRoles($rolesToFlush);
+        $entityManager->flush();
+
+        return $this->redirectToRoute('admin_users_edit', [
+            'id' => $id,
+        ]);
     }
 }

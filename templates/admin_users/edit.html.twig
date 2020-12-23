@@ -3,5 +3,44 @@
 {% block title %}Hello AdminUsersController!{% endblock %}
 
 {% block body %}
-    <h1>Edit</h1>
+    <div class="container">
+        <div class="row">
+            <div class="show-article-container p-3 mt-2">
+                <div class="col-md-12">
+                    <h1>
+                        <a href="{{ path('admin_users_list', {'id': user.id}) }}">
+                            <i class="pr-3 fa fa-backward"></i>
+                        </a>
+                        {{ user.firstName }}, {{ user.email }}
+                    </h1>
+                </div>
+                <hr>
+                <form method="POST" action="{{ path('admin_user_update', {'id': user.id}) }}">
+                    <input type="hidden" name="_method" value="PATCH">
+                    <div class="col-md-12">
+                        <h3>Roles</h3>
+                        <div class="form-check">
+                            <label for="checkbox_admin">Admin</label>
+                            <input hidden {% if 'ROLE_ADMIN' in user.roles %} value="1" {% else %} value="0" {% endif %} name="admin">
+                            <input
+                                id="checkbox_admin"
+                                type="checkbox"
+                                {% if 'ROLE_ADMIN' in user.roles %} checked {% endif %}
+                                onclick="this.checked ? this.previousElementSibling.value = 1 : this.previousElementSibling.value = 0"
+                            >
+
+                            <label for="checkbox_manager">Manager</label>
+                            <input hidden {% if 'ROLE_ACCEPT_CHANGES' in user.roles %} value="1" {% else %} value="0" {% endif %} name="manager">
+                            <input
+                                id="checkbox_manager"
+                                type="checkbox"
+                                {% if 'ROLE_ACCEPT_CHANGES' in user.roles %} checked {% endif %}
+                                onclick="this.checked ? this.previousElementSibling.value = 1 : this.previousElementSibling.value = 0"
+                            >
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+        </div>
+    </div>
 {% endblock %}
