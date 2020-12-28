@@ -6,6 +6,7 @@ use App\Repository\PersonRepository;
 use App\Repository\ReferenceRepository;
 use App\Service\UploaderHelper;
 use App\Validator\UncertainNumber;
+use App\Validator\PersonForm;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -122,6 +123,7 @@ class Person
      * @ORM\OneToMany(targetEntity=Person::class, mappedBy="mother")
      */
     private $children_mother;
+
     /**
      * @ORM\ManyToOne(targetEntity=Person::class, inversedBy="children_mother")
      * @ORM\JoinColumn(onDelete="SET NULL")
@@ -180,6 +182,7 @@ class Person
 
 
     /**
+     * @PersonForm
      * @UncertainNumber()
      */
     protected $uncertainBorn;
