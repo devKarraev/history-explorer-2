@@ -2,15 +2,25 @@
 
 namespace App\Validator;
 
-use App\Entity\Person;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
-class PersonFormValidator extends ConstraintValidator
+class PersonFormAgeValidator extends ConstraintValidator
 {
-
+    /**
+     * Validate person age by 'mother' and 'father' birth day and death day.
+     *
+     * @param mixed $value
+     * @param Constraint $constraint
+     */
     public function validate($value, Constraint $constraint)
     {
+        /* @var $constraint \App\Validator\PersonFormAge */
+
+        if (null === $value || '' === $value) {
+            return;
+        }
+
         $form = $this->context->getRoot();
 
         $father = $form->get('father')->getData();
@@ -21,15 +31,19 @@ class PersonFormValidator extends ConstraintValidator
         }
 
         $parentsData = [
-            'father' => [
-                'borned' => $father === null ? null : $father->getBorn(true, true),
-                'died' => $father === null ? null : $father->getDied(true, true)
-            ],
-            'mother' => [
-                'borned' => $mother === null ? null : $mother->getBorn(true, true),
-                'died' => $mother === null ? null : $mother->getDied(true, true)
-            ]
+            'father' => ['borned' => null, 'died' => null],
+            'mother' => ['borned' => null, 'died' => null]
         ];
+
+        if ($father !== null) {
+            $parentsData['father']['borned'] = $father->getBorn(true, true);
+            $parentsData['father']['died'] = $father->getDied(true, true);
+        }
+
+        if ($mother !== null) {
+            $parentsData['mother']['borned'] = $mother->getBorn(true, true);
+            $parentsData['mother']['died'] = $mother->getDied(true, true);
+        }
 
         $isValid = true;
 

@@ -7,7 +7,7 @@ use Symfony\Component\Validator\Constraint;
 /**
  * @Annotation
  */
-class PersonForm extends Constraint
+class PersonFormAge extends Constraint
 {
     /*
      * Any public properties become valid options for the annotation.

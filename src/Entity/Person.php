@@ -6,7 +6,7 @@ use App\Repository\PersonRepository;
 use App\Repository\ReferenceRepository;
 use App\Service\UploaderHelper;
 use App\Validator\UncertainNumber;
-use App\Validator\PersonForm;
+use App\Validator\PersonFormAge;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -182,7 +182,7 @@ class Person
 
 
     /**
-     * @PersonForm
+     * @PersonFormAge
      * @UncertainNumber()
      */
     protected $uncertainBorn;
