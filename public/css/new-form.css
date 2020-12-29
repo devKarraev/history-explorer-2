@@ -1,0 +1,8 @@
+.table.table-striped.container .row:nth-child(odd) {
+    background-color: rgba(0,0,0,.05);
+}
+
+.table.table-striped.container .row {
+    padding: .75rem;
+    border-top: 1px solid #e9ecef;
+}

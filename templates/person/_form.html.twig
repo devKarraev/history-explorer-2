@@ -1,10 +1,13 @@
 {{ form_start(personForm) }}
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/new-form.css') }}" >
+{% endblock %}
 {% set refIndex = 0 %}
 {% set refTypes = ['born', 'died', 'age', 'livedAt'] %}
 
-<table class="table table-striped">
-    <tr>
-        <td class="col-sm-3" rowspan="2">
+<div class="table table-striped container">
+    <div class="row align-items-center">
+        <div class="col-md-6">
             <div class="form-control">
                 {{ form_widget(personForm.imageFile) }}
                 {% if person is defined %}
@@ -12,43 +15,42 @@
                {% endif %}
                 <label for="person_form_imageFile" class="fa fa-pencil"></label>
             </div>
-        </td>
-        <td class="col-sm-3">
+        </div>
+        <div class="col-md-3">
             {{
                 form_row(personForm.name, {
                 label: 'Name'
                 })
             }}
-        </td>
-        <td colspan="2" class="col-sm-6">
+        </div>
+        <div class="col-md-3">
             {{ form_row(personForm.alternateNames) }}
-        </td>
-    </tr>
-    <tr>
-        <td class="col-sm-3">
+        </div>
+    </div>
+    <div class="row align-items-center">
+        <div class="col-md-4">
             <i class='fa fa-mars fa-2x'></i><i class='fa fa-venus fa-2x'></i>
             {{ form_row(personForm.gender) }}
-        </td>
-        <td class="col-sm-3">
+        </div>
+        <div class="col-md-4">
             <div class="fa fa-female fa-2x"> </div>
             {{ form_row(personForm.mother) }}
-        </td>
-        <td class="col-sm-3">
+        </div>
+        <div class="col-md-4">
             <div class="fa fa-male fa-2x"> </div>
             {{ form_row(personForm.father) }}
-        </td>
-    </tr>
-    <tr>
-
-        <td class="col-sm-3">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
              {{ form_row(personForm.folk) }}
-        </td>
-        <td class="col-sm-3">
+        </div>
+        <div class="col-md-6">
             {{ form_row(personForm.progenitor) }}
-        </td>
-    </tr>
-    <tr>
-        <td class="col-sm-3">
+        </div>
+    </div>
+    <div class="row align-items-center">
+        <div class="col-md-3">
             {#% if not person.born and person.bornEstimated %}
                 {{ form_row(personForm.born, {attr: { placeholder: 'estimation: ' ~ person.bornEstimated} })}}
             {% else %}
@@ -60,8 +62,8 @@
                 <a href="#{{ refIndex }}">[Quelle]</a>
                 {% set refIndex = refIndex +1 %}
             {% endif %}
-        </td>
-        <td>
+        </div>
+        <div class="col-md-3">
             {#% if not person.died and person.diedEstimated %}
                 {{ form_row(personForm.died, {attr: { placeholder: 'estimation: ' ~ person.diedEstimated} })}}
             {% else %}
@@ -72,8 +74,8 @@
                 <a href="#{{ refIndex }}">[Quelle]</a>
                 {% set refIndex = refIndex +1 %}
             {% endif %}
-        </td>
-        <td>
+        </div>
+        <div class="col-md-3">
             {#% if not person.age and person.age(true)%}
                 {{ form_row(personForm.age, {attr: { placeholder: 'estimation: ' ~ person.age(true)} })}}
             {% else %}
@@ -84,16 +86,16 @@
                 <a href="#{{ refIndex }}">[Quelle]</a>
                 {% set refIndex = refIndex +1 %}
             {% endif %}
-        </td>
-        <td>
+        </div>
+        <div class="col-md-3">
             {{ form_row(personForm.livedAtTimeOfPerson) }}
             {% if person is defined and person.referenceList('livedAt') %}
                 <a href="#{{ refIndex }}">[Quelle]</a>
                 {% set refIndex = refIndex +1 %}
             {% endif %}
-        </td>
-    </tr>
-</table>
+        </div>
+    </div>
+</div>
 
 <button type="submit" class="btn btn-primary">{{ button_text }}</button>
 {{ form_end(personForm)}}
