@@ -152,6 +152,7 @@ class PersonFormType extends AbstractType
                 'invalid_message' => 'Folk not known. Create a new folk before'
             ])
             ->add('imageFile', FileType::class, [
+                'attr' => ['hidden' => true],
                 'mapped' => false,
                 'required' => false,
                 'invalid_message' => 'Symfony is too smart for your hacking!',

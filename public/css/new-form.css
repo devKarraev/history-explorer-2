@@ -6,3 +6,11 @@
     padding: .75rem;
     border-top: 1px solid #e9ecef;
 }
+
+.add-file {
+    position: absolute;
+    top: 0;
+    left: 15px;
+    right: 15px;
+    padding: 15px;
+}
