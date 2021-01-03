@@ -301,48 +301,68 @@ class PersonController extends BaseController
     public function edit(Person $person, Request $request, EntityManagerInterface $em, UploaderHelper $uploaderHelper,
         UncertainNumberValidator $uncertainNumberValidator, TreeLogic $treeLogic)
     {
-        $form = $this->createForm(PersonFormType::class, $person,
-            [ /* 'include_x' => true*/
-                'user' => $this->getUser(),
-            ]
-        );
+        // It is necessary so that the original record doesn't change.
+        if ($request->getMethod() === 'POST' && $request->get('person_form')) {
+            $personClone = clone $this->personRepository->find($request->get('id'));
+            $form = $this->createForm(PersonFormType::class, $personClone,
+                [ /* 'include_x' => true*/
+                    'user' => $this->getUser(),
+                ]
+            );
+        } else {
+            $form = $this->createForm(PersonFormType::class, $person,
+                [ /* 'include_x' => true*/
+                    'user' => $this->getUser(),
+                ]
+            );
+        }
 
         $form->handleRequest($request);
         if($form->isSubmitted() && $form->isValid()) {
 
-            $userChange = $person->getUpdateOf();
-            if($userChange) {
-                $userChange->setModificationType("edit");
-                $em->persist($userChange);
-            }
+            $user = $this->getUser();
+            $change = new EntityChange();
+            $change->setPerson($personClone)->setModificationType("edit")->setChangedBy($user);
+            $em->persist($change);
+            $person->addChange($change);
+            $em->persist($change);
+
+            // create a clone
+            $personClone->setUpdateOf($change);
+            $personClone->setApproved(false);
+            $personClone->setOwner($user);
+            $em->persist($personClone);
+
+            $em->flush();
+
             /** @var UploadedFile $uploadedFile */
             $uploadedFile =  $form['imageFile']->getData();
             if($uploadedFile) {
 
-                $newFilename = $uploaderHelper->uploadPersonImage($uploadedFile, $person->getImage());
-                $person->setImage($newFilename);
+                $newFilename = $uploaderHelper->uploadPersonImage($uploadedFile, $personClone->getImage());
+                $personClone->setImage($newFilename);
             }
             $uow = $em->getUnitOfWork();
-            $uow->computeChangeSet($em->getClassMetadata(get_class($person)), $form->getViewData());
+            $uow->computeChangeSet($em->getClassMetadata(get_class($personClone)), $form->getViewData());
             $changeSet = $uow->getEntityChangeSet($form->getData());
-            $newModel = new PersonFormModel(clone($person));
+            $newModel = new PersonFormModel(clone($personClone));
 
             dump($newModel);
-            dump($person);
-            $em->persist($person);
+            dump($personClone);
+            $em->persist($personClone);
             $em->flush();
 
-            if(!$newModel->isEqual($uncertainNumberValidator, $person, true)) {
+            if(!$newModel->isEqual($uncertainNumberValidator, $personClone, true)) {
 
                 $changeSet['uncertainBorn'] = 1;
             }
-            if(!$newModel->isEqual($uncertainNumberValidator, $person, false)) {
+            if(!$newModel->isEqual($uncertainNumberValidator, $personClone, false)) {
                 $changeSet['uncertainDied'] = 1;
             }
 
             if(isset($changeSet['gender'])) {
-                foreach ($person->getChildren() as $child) {
-                    $person->removeChild($child);
+                foreach ($personClone->getChildren() as $child) {
+                    $personClone->removeChild($child);
                 }
             }
             $born = null;
@@ -358,34 +378,34 @@ class PersonController extends BaseController
                 $born = $uncertainNumberValidator->getValue($bornUncertain);
 
                 if($uncertainNumberValidator->isUncertain($bornUncertain)) {
-                    $person->setBornEstimated($born);
-                    $person->setBorn(null);
+                    $personClone->setBornEstimated($born);
+                    $personClone->setBorn(null);
                     $isBornUncertain = true;
                 } else {
-                    $person->setBorn($born);
-                    $person->setBornEstimated($born);
+                    $personClone->setBorn($born);
+                    $personClone->setBornEstimated($born);
                 }
             } else {
-                $person->setBorn(null);
-                $person->setBornEstimated(null);
+                $personClone->setBorn(null);
+                $personClone->setBornEstimated(null);
             }
           //  dd($changeSet);
             if($diedUncertain) {
                 $died = $uncertainNumberValidator->getValue($diedUncertain);
                 if($uncertainNumberValidator->isUncertain($diedUncertain)) {
-                    $person->setDiedEstimated($died);
-                    $person->setDied(null);
+                    $personClone->setDiedEstimated($died);
+                    $personClone->setDied(null);
                     $isDiedUncertain = true;
                 } else {
-                    $person->setDied($died);
-                    $person->setDiedEstimated($died);
+                    $personClone->setDied($died);
+                    $personClone->setDiedEstimated($died);
                 }
             } else {
-                $person->setDied(null);
-                $person->setDiedEstimated(null);
+                $personClone->setDied(null);
+                $personClone->setDiedEstimated(null);
             }
 
-            $em->persist($person);
+            $em->persist($personClone);
             $em->flush();
 
             $age = $form['age']->getData();
@@ -395,23 +415,23 @@ class PersonController extends BaseController
                 if($born == null) {
                     if($died != null) {
                         if ($isDiedUncertain) {
-                            $person->setBornEstimated($born = $died - $age);
+                            $personClone->setBornEstimated($born = $died - $age);
 
                         } else {
-                            $person->setBorn($born = $died - $age);
+                            $personClone->setBorn($born = $died - $age);
                         }
-                        $em->persist($person);
+                        $em->persist($personClone);
                         $em->flush();
                     }
                 }
                 if($died == null) {
                     if($born != null) {
                         if ($isBornUncertain) {
-                            $person->setDiedEstimated($born + $age);
+                            $personClone->setDiedEstimated($born + $age);
                         } else {
-                            $person->setDied($born + $age);
+                            $personClone->setDied($born + $age);
                         }
-                        $em->persist($person);
+                        $em->persist($personClone);
                         $em->flush();
                     }
                 }
@@ -431,54 +451,6 @@ class PersonController extends BaseController
 
 
             $this->addFlash('success', 'Person updated');
-            return $this->redirectToRoute('person_edit', [
-                'id' => $person->getId(),
-            ]);
-        } else {
-
-
-            $user = $this->getUser();
-            /** @var EntityChange $userChange */
-            $userChange = $this->getUserChange($person);
-
-            $createCopy = (
-                in_array('ROLE_ACCEPT_CHANGES', $user->getRoles()) // admin
-                || $person->getUpdateOf() // bereits kopiert
-                || ($userChange && $userChange->getModificationType() === 'new') // neu angelegt
-            ) ? false : true;
-            if($createCopy)
-            {
-                if (!$userChange) {
-                    // create change
-                    $em->persist($person);
-                    $change = new EntityChange();
-                    $change->setPerson($person)->setModificationType("edit_init")->setChangedBy($user);
-                    $em->persist($change);
-                    $person->addChange($change);
-                    $em->persist($change);
-                    // create a clone
-                    $copyPerson = clone($person);
-                    $copyPerson->setUpdateOf($change);
-                   // $copyPerson->setDescription("clone");
-                    $copyPerson->setApproved(false);
-                    $copyPerson->setOwner($user);
-                    $em->persist($copyPerson);
-                    $em->flush();
-                } else {
-
-                    $copyPerson = $this->personRepository->findOneBy(
-                        [
-                            'updateOf' => $userChange->getId()
-                        ]
-                    );
-                }
-                return $this->redirectToRoute(
-                    'person_edit',
-                    [
-                        'id' => $copyPerson->getId(),
-                    ]
-                );
-            }
         }
 
         $addChildren = [];
