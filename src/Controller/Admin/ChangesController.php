@@ -38,20 +38,17 @@ class ChangesController extends AbstractController
      */
     public function list(Request $request, PaginatorInterface $paginator): Response
     {
-        $sort = ['field' => 'p.name', 'direction' => 'asc'];
-
-        $q = $request->query->get('q');
-        $queryBuilder = $this->personRepository->getForAdminChangesList($q);
+        $user = $this->getUser();
         $pagination = null;
 
-        if ($queryBuilder->getQuery()->getFirstResult()) {
+        if (count($this->getDoctrine()->getRepository(\App\Entity\EntityChange::class)->findAll()) !== 0) {
+            $q = $request->query->get('q');
+            $queryBuilder = $this->personRepository->getForAdminChangesList($q);
+
             $pagination = $paginator->paginate(
                 $queryBuilder,
                 $request->query->getInt('page', 1)/*page number*/,
-                self::PAGE_LIMIT/*limit per page*/, [
-                    'defaultSortFieldName' => $sort['field'],
-                    'defaultSortDirection' => $sort['direction'],
-                ]
+                self::PAGE_LIMIT/*limit per page*/
             );
             $pagination = $this->preparePaginator($pagination);
         }
