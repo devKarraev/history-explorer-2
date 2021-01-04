@@ -18,14 +18,10 @@ class EntityChangeController extends AbstractController
     public function denyChange(EntityChange $change, EntityManagerInterface $em)
     {
         $user = $this->getUser();
-        if(in_array('ROLE_ACCEPT_CHANGES', $user->getRoles())
+        if(in_array('ROLE_ACCEPT_CHANGES', $user->getRoles()) || in_array('ROLE_ADMIN', $user->getRoles())
         || $user === $change->getChangedBy() ) {
-            $p = $change->getPerson();
             $l = $change->getLocation();
             $e = $change->getEvent();
-            if($p) {
-                $em->remove($p);
-            }
             if($l) $em->remove($l);
             if($e) $em->remove($e);
             $em->remove($change);

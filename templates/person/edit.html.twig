@@ -20,12 +20,12 @@
 
 {% block content_body %}
     <h1>
-    <a href="{{ path('persons_list') }}">
+    <a href="{{ app.request.headers.get('referer') }}">
         <i class="pr-3 fa fa-backward"></i>
     </a>Edit {{ person.name}}
     {% if not person.approved and is_granted('ROLE_ACCEPT_CHANGES') %}
-        <a href="{{ path('person_accept', {id: person.id}) }}" class="btn btn-success"><span class="fa fa-check-circle"></span></a>
-        <a href="{{ path('person_deny', {id: person.id}) }}" class="btn btn-danger"><span class="fa fa-ban"></span></a>
+        <a href="{{ path('change_accept', {id: person.updateOf.id}) }}" class="btn btn-success"><span class="fa fa-check-circle"></span></a>
+        <a href="{{ path('change_deny', {id: person.updateOf.id}) }}" class="btn btn-danger"><span class="fa fa-ban"></span></a>
     {% endif %}
     </h1>
 <hr>

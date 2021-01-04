@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Admin;
 
 use App\Repository\UserRepository;
 use Knp\Component\Pager\PaginatorInterface;
@@ -13,7 +13,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 /**
  * @IsGranted("ROLE_ADMIN")
  */
-class AdminUsersController extends AbstractController
+class UsersController extends AbstractController
 {
     /**
      * @var UserRepository
@@ -36,7 +36,7 @@ class AdminUsersController extends AbstractController
     const MANAGER_ROLE = 'ROLE_ACCEPT_CHANGES';
 
     /**
-     * AdminUsersController constructor.
+     * UsersController constructor.
      *
      * @param UserRepository $userRepository
      */

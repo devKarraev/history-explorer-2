@@ -96,20 +96,33 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% for change in person.userChanges(app.user)  %}
-                                        {% if change.modificationType != "edit_init" %}
-                                            <a href="{{path('change_deny', {
-                                                id: change.id
-                                            })
-                                            }}">
-                                                <span class="fa fa-ban alert-danger"></span>
-                                            </a><br>
-                                        {% endif %}
-                                    {% endfor %}
+                                    {% if is_granted('ROLE_ACCEPT_CHANGES') %}
+                                        {% for change in person.changes  %}
+                                            {% if change.modificationType != "edit_init" %}
+                                                <a href="{{path('change_deny', {
+                                                    id: change.id
+                                                })
+                                                }}">
+                                                    <span class="fa fa-ban alert-danger"></span>
+                                                </a><br>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        {% for change in person.userChanges(app.user)  %}
+                                            {% if change.modificationType != "edit_init" %}
+                                                <a href="{{path('change_deny', {
+                                                    id: change.id
+                                                })
+                                                }}">
+                                                    <span class="fa fa-ban alert-danger"></span>
+                                                </a><br>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
                                 </td>
                                 <td>
-                                {% if is_granted('ROLE_ACCEPT_CHANGES') %}
-                                    {% for change in person.changes  %}
+                                    {% if is_granted('ROLE_ACCEPT_CHANGES') %}
+                                        {% for change in person.changes  %}
                                             {% if change.modificationType != "edit_init" %}
                                                 <a href="{{path('change_accept', {
                                                     id: change.id

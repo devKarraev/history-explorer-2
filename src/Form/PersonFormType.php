@@ -75,6 +75,7 @@ class PersonFormType extends AbstractType
             ->add('alternateNames', TextType::class, [
                 'label' => 'Alternate Names',
                 'required'   => false,
+                'empty_data' => ''
                 ])
             ->add('gender', ChoiceType::class, [
                 'label' => false,

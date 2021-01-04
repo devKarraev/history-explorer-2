@@ -37,11 +37,35 @@ class PersonRepository extends ServiceEntityRepository
                 $qb->andWhere('p.name LIKE :term')
                     ->setParameter('term', '%' . $term . '%');
             }
-
         }
 
         return $qb
             ->orderBy('p.name', 'ASC');
+    }
+
+    /**
+     * Get records for admin change list.
+     *
+     * @param string|null $term
+     *
+     * @return QueryBuilder
+     */
+    public function getForAdminChangesList(?string $term): QueryBuilder
+    {
+        $qb = $this->createQueryBuilder('p');
+
+        $changesId = array_unique(array_map(function ($changeEntity) {
+            return $changeEntity->getPerson()->getId();
+        }, $this->getEntityManager()->getRepository(\App\Entity\EntityChange::class)->findAll()));
+
+        $qb->where('p.updateOf IS NOT null')->orWhere($qb->expr()->in('p.id', $changesId));
+
+        if ($term){
+            $qb->andWhere('p.name LIKE :term')
+                ->setParameter('term', '%' . $term . '%');
+        }
+
+        return $qb;
     }
 
     public function getIdByGender(?User $user, string $gender, bool $includeUnknown = true, ?int $olderThan = null, ?int $youngerThan = null) {
