@@ -1,5 +1,9 @@
 {% extends 'base.html.twig' %}
 
+{% block title %}
+    Changes list
+{% endblock %}
+
 {% block stylesheets %}
     {{ parent() }}
     <link rel="stylesheet" href="{{ asset('css/admin-changes.css') }}">
@@ -40,7 +44,6 @@
                             <th></th>
                         </tr>
                         <tr>
-                            <th></th>
                             <th>
                                 <form>
                                     <div class="input-group mb-3">
@@ -61,6 +64,7 @@
                             </th>
                             <th></th>
                             <th></th>
+                            <th></th>
                         </tr>
                         </thead>
                         <tbody>
@@ -76,21 +80,23 @@
                                                                     <span>{{ childEntity.name }}</span>
                                                                     <span class="child-actions">
                                                                         <a href="{{path('change_accept', {
-                                                                            id: childEntity.updateOf.id
+                                                                            id: childEntity.updateOf.id,
+                                                                            redirectRoute: 'admin_changes_list'
                                                                         })
                                                                         }}">
                                                                             <span class="fa fa-check alert-success"></span>
                                                                         </a>
                                                                         <a href="{{path('change_deny', {
-                                                                            id: childEntity.updateOf.id
+                                                                            id: childEntity.updateOf.id,
+                                                                            redirectRoute: 'admin_changes_list'
                                                                         })
                                                                         }}">
                                                                             <span class="fa fa-ban alert-danger"></span>
                                                                         </a>
-                                                                        <a href="{{path('person_edit', {
+                                                                        <a href="{{path('admin_changes_edit', {
                                                                             id: childEntity.id
                                                                         })
-                                                                        }}"><span class="fa fa-pencil"></span>
+                                                                        }}"><span class="fa fa-eye"></span>
                                                                         </a>
                                                                     </span>
                                                                 </div>
@@ -100,10 +106,10 @@
                                                 </td>
                                                 <td>{{ entity.children|length }}</td>
                                                 <td>
-                                                    <a href="{{path('person_edit', {
+                                                    <a href="{{path('admin_changes_edit', {
                                                         id: entity.id
                                                     })
-                                                    }}"><span class="fa fa-pencil"></span>
+                                                    }}"><span class="fa fa-eye"></span>
                                                     </a>
                                                 </td>
                                                 <td></td>

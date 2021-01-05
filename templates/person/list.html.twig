@@ -99,6 +99,25 @@
                                     {% if is_granted('ROLE_ACCEPT_CHANGES') %}
                                         {% for change in person.changes  %}
                                             {% if change.modificationType != "edit_init" %}
+                                                <a href="{{path('admin_changes_edit', {
+                                                    id: change.person.id
+                                                })
+                                                }}">
+                                                    <span class="fa fa-eye"></span>
+                                                </a><br>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                    {% if not person.userChanges(app.user)|length and not is_granted('ROLE_ACCEPT_CHANGES') %}
+                                        {% if person.hasUpdate %}
+                                            <span class="fa fa-question-circle" title="Record on moderation"></span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if is_granted('ROLE_ACCEPT_CHANGES') %}
+                                        {% for change in person.changes  %}
+                                            {% if change.modificationType != "edit_init" %}
                                                 <a href="{{path('change_deny', {
                                                     id: change.id
                                                 })

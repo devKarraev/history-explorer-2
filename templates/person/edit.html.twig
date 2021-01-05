@@ -20,7 +20,7 @@
 
 {% block content_body %}
     <h1>
-    <a href="{{ app.request.headers.get('referer') }}">
+    <a href="{{ path('persons_list') }}">
         <i class="pr-3 fa fa-backward"></i>
     </a>Edit {{ person.name}}
     {% if not person.approved and is_granted('ROLE_ACCEPT_CHANGES') %}

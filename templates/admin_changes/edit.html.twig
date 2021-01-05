@@ -1,0 +1,115 @@
+{% extends 'content_base.html.twig' %}
+
+{% block title %}
+    View {{ person.name}}
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/algolia-autocomplete.css') }}" >
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/min/dropzone.min.css" />
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/autocomplete.js/0/autocomplete.jquery.min.js"></script>
+    <script src="{{ asset('js/algolia-autocomplete.js') }}"></script>
+    <script src="{{ asset('js/dynamic_fields.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/min/dropzone.min.js"></script>
+{% endblock %}
+
+{% block content_body %}
+    <h1>
+        <a href="{{ path('admin_changes_list') }}">
+            <i class="pr-3 fa fa-backward"></i>
+        </a>View {{ person.name}}
+        {% if not person.approved and is_granted('ROLE_ACCEPT_CHANGES') %}
+            <a href="{{ path('change_accept', {id: person.updateOf.id, redirectRoute: 'admin_changes_list'}) }}" class="btn btn-success"><span class="fa fa-check-circle"></span></a>
+            <a href="{{ path('change_deny', {id: person.updateOf.id, redirectRoute: 'admin_changes_list'}) }}" class="btn btn-danger"><span class="fa fa-ban"></span></a>
+        {% endif %}
+    </h1>
+    <hr>
+
+    <div class="row">
+        <div class="col-sm-12">
+            {{ include('admin_changes/_form.html.twig') }}
+        </div>
+        <hr>
+        <div class="col-sm-12">
+            {{ include('admin_changes/_references.twig', {
+
+            }) }}
+        </div>
+    </div>
+
+    <div class="col-sm-12">
+        <h3><i class="pr-3 fa fa-users"></i>
+            {% if person.children|length == 0 %}
+            no children
+            {% elseif person.children|length == 1%}
+            on child
+            {% else %}
+            {{ person.children|length }} children</h3>
+        {% endif %}
+
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th></th>
+                <th>Name</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for child in person.children %}
+                <tr>
+                    <td>
+                        <a href="{{ path('person_show', {id: child.id}) }}">
+                            <img class="comment-img rounded-circle" src="{{ child.image|imagine_filter('squared_thumbnail_small') }}">
+                        </a>
+                    </td>
+                    <td>
+                        <a href="{{ path('person_show', {id: child.id}) }}">
+                            <div class="comment-container d-inline-block pl-3 align-top">
+                                <span class="comment"> {{ child.name }}</span>
+                            </div>
+                        </a>
+                    </td>
+                        <td>
+                        </td>
+                </tr>
+            {% else %}
+                Keine Kinder
+            {% endfor %}
+
+            {% for child in addchildren %}
+                <tr>
+                    <td>
+                        <a href="{{ path('person_show', {id: child.id}) }}">
+                            <img class="comment-img rounded-circle" src="{{ child.image | imagine_filter('squared_thumbnail_small') }}">
+                        </a>
+                    </td>
+                    <td>
+                        <a href="{{ path('person_show', {id: child.id}) }}">
+                            <div class="comment-container d-inline-block pl-3 align-top">
+                                <span class="comment"> {{ child.name }}</span>
+                            </div>
+                        </a>
+                    </td>
+                    <td>
+                        <a href="{{path('addLink', {'parent': person.id, 'child' : child.id}) }}" class='btn btn-success btn-xs' title='Hinzufügen' data-confirm='<h3>Soll diese Person wirklich als Kind hinzugefügt?</h3>'>
+                            <span class="glyphicon glyphicon-add"></span>&nbsp;Kind hinzufügen</a>
+                    </td>
+                </tr>
+            {% else %}
+
+            {% endfor %}
+
+            </tbody>
+        </table>
+    </div>
+    </div>
+
+{% endblock %}
+
+

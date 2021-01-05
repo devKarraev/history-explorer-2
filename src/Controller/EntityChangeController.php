@@ -15,7 +15,7 @@ class EntityChangeController extends AbstractController
      * @Route ("/change/{id}/deny", name="change_deny")
      * @IsGranted("ROLE_EDIT_ENTITY", subject="change")
      */
-    public function denyChange(EntityChange $change, EntityManagerInterface $em)
+    public function denyChange(EntityChange $change, EntityManagerInterface $em, Request $request)
     {
         $user = $this->getUser();
         if(in_array('ROLE_ACCEPT_CHANGES', $user->getRoles()) || in_array('ROLE_ADMIN', $user->getRoles())
@@ -28,7 +28,9 @@ class EntityChangeController extends AbstractController
             $em->flush();
         }
 
-        return $this->redirectToRoute('persons_list', [
+        $redirectRoute = $request->get('redirectRoute') === null ? 'persons_list': $request->get('redirectRoute');
+
+        return $this->redirectToRoute($redirectRoute, [
 
         ]);
 
@@ -38,7 +40,7 @@ class EntityChangeController extends AbstractController
      * @Route ("/change/{id}/accept", name="change_accept")
      * @IsGranted("ROLE_ACCEPT_CHANGES", subject="change")
      */
-    public function acceptChange(EntityChange $change, EntityManagerInterface $em)
+    public function acceptChange(EntityChange $change, EntityManagerInterface $em, Request $request)
     {
 
         if($change->getModificationType() == 'new') {
@@ -81,8 +83,9 @@ class EntityChangeController extends AbstractController
 
         $em->flush();
 
+        $redirectRoute = $request->get('redirectRoute') === null ? 'persons_list': $request->get('redirectRoute');
 
-        return $this->redirectToRoute('persons_list', [
+        return $this->redirectToRoute($redirectRoute, [
 
         ]);
 

@@ -1,0 +1,62 @@
+{% set refTypes = {born : 'time of birth',
+    died:'time of death',
+    age:'age achieved',
+    livedAt:'l',
+    placeBirth: 'place of birth',
+    placeDeath: 'place of death',
+    livedAt: 'lived at times of',
+    folk: 'folk',
+    prognitor:'progenitor',
+    etc :'something else',
+    test :'TBD'
+} %}
+
+{% set refIndex = 0 %}
+<div class="row">
+    <div class="col-sm-12">
+        <h3><i class="pr-3 fa fa-bookmark"></i>{{ person.referenceList|length }} Reference(s)</h3>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Url or Bible quotation</th>
+                <th>Proves type</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if person.referenceList is defined %}
+                {% for key, value in refTypes %}
+                    <div id="{{ refIndex }}">
+                        {% for personreference in person.referenceList(key) %}
+                            <tr>
+                                <td>
+                                    <i class="pr-3 fa fa-external-link"></i>
+                                    <div class="comment-container d-inline-block pl-3 align-top">
+                                        <a href="{{ personreference.reference.generateBibleServerUrl }}",
+                                           onclick="window.open('{{ personreference.reference.generateBibleServerUrl }}',
+                                                   'newwindow',
+                                                   'width=400,height=250');
+                                                   return false;"
+                                        > {{ personreference.reference }}
+                                        </a>
+                                    </div>
+
+                                </td>
+                                <td>
+                                    {{ value }}
+                                </td>
+                                <td>
+                                </td>
+                            </tr>
+                        {% else %}
+
+                        {% endfor %}
+                    </div>
+                    {% set refIndex = refIndex +1 %}
+                {% endfor %}
+            {% endif %}
+
+            </tbody>
+        </table>
+    </div>
+</div>
