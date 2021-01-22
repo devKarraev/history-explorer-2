@@ -59,9 +59,9 @@ class PersonFormType extends AbstractType
         $relatedPerson = null;
 
         if ($isEdit) {
-            $formattedEstimatedBirth = $person->getBorn(true, false, true);
-            $formattedEstimatedDeath = $person->getDied(true, false, true);
-            $formattedEstimatedAge = $person->getAge(true, false, true);
+            $formattedEstimatedBirth = $person->getBorn(true, true, true);
+            $formattedEstimatedDeath = $person->getDied(true, true, true);
+            $formattedEstimatedAge = $person->getAge(true, true, true);
 
             $guessedBirth = $person->getBorn(true, true);
             $guessedDeath = $person->getDied(true, true);
@@ -102,7 +102,7 @@ class PersonFormType extends AbstractType
                 'label' => 'Age',//($person && !$person->getAge() && $formattedEstimatedAge) ? ' Age (current estimation: '. $formattedEstimatedAge .')' : 'Age',
                 'required'   => false,
                 'help' => 'If you don\'t know year of death, perhaps the age?',
-                'attr' => ['placeholder' => ($person && !$formattedEstimatedAge && $guessedAge) ? 'Estimation: '. $guessedAge : 'Age']
+                'attr' => ['placeholder' => ($person && !$formattedEstimatedAge && $guessedAge) ? 'Estimation: '. $guessedAge : 'Age', 'value' => $guessedAge]
             ])
             ->add('uncertainDied', TextType::class, [
                 'required'   => false,

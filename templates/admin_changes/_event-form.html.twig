@@ -13,7 +13,9 @@
     <div class="row align-items-end">
         <div class="col-md-3">
             <div class="form-control">
-                {{ form_widget(form.imageFile) }}
+                {{ form_widget(form.imageFile, {
+                    disabled: 'true'
+                }) }}
                 {% if event is defined %}
                     <img class="show-article-img" src="{{  event.image|imagine_filter('squared_thumbnail_medium')  }}">
                 {% endif %}
@@ -23,7 +25,9 @@
         <div class="col-md-3">
             <i class='fa fa-sticky-note fa-2x'></i>
             {{
-            form_row(form.name)
+            form_row(form.name, {
+                disabled: 'true'
+            })
             }}
             {% if event is defined and event.referenceList('name') %}
                 <a href="#{{ refIndex }}">[Quelle]</a>
@@ -32,11 +36,15 @@
         </div>
         <div class="col-md-3">
             <i class='fa fa-location-arrow fa-2x'></i>
-            {{ form_row(form.location) }}
+            {{ form_row(form.location, {
+                disabled: 'true'
+            }) }}
         </div>
         <div class="col-md-3">
             <i class='fa fa-eye-slash fa-2x'></i>
-            {{ form_row(form.hide) }}
+            {{ form_row(form.hide, {
+                disabled: 'true'
+            }) }}
         </div>
     </div>
     <div class="row align-items-top">
@@ -47,12 +55,15 @@
                 attr: {
                     'data-event-next-url':path('next_event_select'),
                     class: 'js-event-prev'
-                }
+                },
+                disabled: 'true'
             }) }}
         </div>
         <div class="col-md-4">
             <i class='fa fa-clock-o fa-2x'></i>
-            {{ form_row(form.uncertainTime) }}
+            {{ form_row(form.uncertainTime, {
+                disabled: 'true'
+            }) }}
         </div>
         <div class="col-md-4">
             <i class='fa fa-clock-o fa-2x'></i>
@@ -60,13 +71,16 @@
                 attr: {
                     'data-event-prev-url': path('prev_event_select'),
                     class: 'js-event-next'
-                }
+                },
+                disabled: 'true'
             }) }}
         </div>
     </div>
     <div class="row justify-content-end">
         <div class="col-md-3 ">
-            {{ form_row(form.relativeTime) }}
+            {{ form_row(form.relativeTime, {
+                disabled: 'true'
+            }) }}
         </div>
     </div>
 </div>

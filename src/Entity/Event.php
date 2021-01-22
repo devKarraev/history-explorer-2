@@ -7,6 +7,7 @@ use App\Service\UploaderHelper;
 use App\Validator\UncertainNumber;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -91,6 +92,14 @@ class Event
      */
     private $orderedIndex;
 
+    /**
+     * @ORM\OneToOne(targetEntity=EntityChange::class, inversedBy="updatedEvent", cascade={"persist", "remove"})
+     * @ORM\JoinColumns({
+     *   @ORM\JoinColumn(name="update_of_id", referencedColumnName="id", nullable=true, onDelete="SET NULL")
+     * })
+     */
+    private $updateOf;
+
     public function __construct()
     {
         $this->participants = new ArrayCollection();
@@ -104,7 +113,7 @@ class Event
     protected $uncertainTime;
 
     /**
-     * @ORM\OneToMany(targetEntity=EntityChange::class, mappedBy="eventChanges")
+     * @ORM\OneToMany(targetEntity=EntityChange::class, mappedBy="event")
      */
     private $changes;
 
@@ -478,6 +487,18 @@ class Event
         return $this;
     }
 
+    public function getUpdateOf(): ?EntityChange
+    {
+        return $this->updateOf;
+    }
+
+    public function setUpdateOf(?EntityChange $updateOf): self
+    {
+        $this->updateOf = $updateOf;
+
+        return $this;
+    }
+
     public function getOrderedIndex(): ?int
     {
         return $this->orderedIndex;
@@ -518,7 +539,7 @@ class Event
     {
         if (!$this->changes->contains($change)) {
             $this->changes[] = $change;
-            $change->setEventChanges($this);
+            $change->setEvent($this);
         }
 
         return $this;
@@ -559,5 +580,88 @@ class Event
         $this->relativeTime = $relativeTime;
 
         return $this;
+    }
+
+    public function hasUpdate(): bool {
+        $ret = false;
+        foreach ($this->getChanges() as $change) {
+            if($change->getModificationType() != 'edit_init') {
+                $ret = true;
+                break;
+            }
+        }
+        return $ret;
+    }
+
+    public function getUpdatedName() :?string {
+        $ret = null;
+
+        foreach ($this->getChanges() as $change) {
+            if($change->getModificationType() == 'edit') {
+
+                if($change->getUpdatedEvent())
+                {
+                    $newName = $change->getUpdatedEvent()->getName();
+                    $ret = $newName == $this->getName() ? null : $newName;
+                }
+            }
+        }
+        return $ret;
+
+    }
+
+    public function showInList() :bool{
+        $ret = true;
+
+        if($this->getUpdateOf()) {
+            $type = $this->getUpdateOf()->getModificationType();
+            if($type == 'edit') {
+                $ret = false;
+            }
+        }
+        return $ret;
+    }
+
+    /**
+     * @return Collection|EntityChange[]
+     */
+    public function getUserChanges(User $user) : Collection {
+
+        $ret = new ArrayCollection();
+        if( in_array('ROLE_ACCEPT_CHANGES', $user->getRoles())) {
+            $ret = $this->changes;
+        } else {
+            /** @var EntityChange $change */
+            foreach ( $this->changes as $change) {
+                if($change->getChangedBy() === $user) {
+                    $ret->add($change);
+                }
+            }
+        }
+        return $ret;
+    }
+
+    public function updateFromChange(EntityManagerInterface $em, Event $e){
+        /*if($this->name !== $p->getName()) $this->setName($p->getName());
+
+        if($this->name !== $p->getName()) $this->setName($p->getName());*/
+
+        $em->refresh($e);
+        // dd($e);
+
+        $this->setName($e->getName());
+        $this->setApproved($e->getApproved());
+        $this->setHappenedAfter($e->getHappenedAfter());
+        $this->setHappenedBefore($e->getHappenedBefore());
+        $this->setHide($e->getHide());
+        $this->setImage($e->getImage());
+        $this->setLocation($e->getLocation());
+        $this->setOrderedIndex($e->getOrderedIndex());
+        $this->setOwner($e->getOwner());
+        $this->setRelativeTime($e->getRelativeTime());
+        $this->setUncertainTime($e->getUncertainTime());
+        $this->setYear($e->getYear());
+        $this->setYearCalculated($e->getYearCalculated());
+        $this->setYearEstimated($e->getYearEstimated());
     }
 }

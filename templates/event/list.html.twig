@@ -50,32 +50,108 @@
             <tbody>
         <!-- Supporting Persons -->
                 {% for event in pagination %}
-                <tr>
-                    <td>
-                        <a href="{{ path('event_show', {id: event.id}) }}">
-                            <img class="article-img" src="{{ event.image | imagine_filter('squared_thumbnail_small') }}">
-                        </a>
-                    </td>
-                    <td>
-                        <div class="d-inline-block pl-3 align-middle">
-                            <span>{{ event.name }}</span>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="d-inline-block pl-3 align-middle">
-                            <span>{{ event.yearCalculated }}</span>
-                        </div>
-                    </td>
-                    <td></td>
-                    <td>
-                        <a href="{{path('event_edit', {
-                            id: event.id
-                        })
-                        }}">
-                            <span class="fa fa-pencil"></span>
-                        </a>
-                    </td>
-                </tr>
+                    {% if event.showInList %}
+                        {% if event.hasUpdate %}
+                            <tr class="tobeapproved">
+                        {% else %}
+                            <tr>
+                        {% endif %}
+                            <td>
+                                <a href="{{ path('event_show', {id: event.id}) }}">
+                                    <img class="article-img" src="{{ event.image | imagine_filter('squared_thumbnail_small') }}">
+                                </a>
+                            </td>
+                            <td>
+                                <div class="d-inline-block pl-3 align-middle">
+                                    {% if event.getUpdatedName %}
+                                        <span><s>{{ event.name }}</s><br>{{ event.getUpdatedName }}</span>
+                                    {% else %}
+                                        <span>{{ event.name }}</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-inline-block pl-3 align-middle">
+                                    <span>{{ event.yearCalculated }}</span>
+                                </div>
+                            </td>
+                            <td></td>
+                            <td>
+                                <a href="{{path('event_edit', {
+                                    id: event.id
+                                })
+                                }}">
+                                    <span class="fa fa-pencil"></span>
+                                </a>
+                                {% if is_granted('ROLE_ACCEPT_CHANGES') and not event.approved %}
+                                    <a href="{{path('person_accept', {
+                                        id: event.id
+                                    })
+                                    }}">
+                                    </a>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if is_granted('ROLE_ACCEPT_CHANGES') %}
+                                    {% for change in event.changes  %}
+                                        {% if change.modificationType != "edit_init" %}
+                                            <a href="{{path('admin_changes_edit', {
+                                                id: change.event.id,
+                                                type: 'event'
+                                            })
+                                            }}">
+                                                <span class="fa fa-eye"></span>
+                                            </a><br>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                                {% if not event.userChanges(app.user)|length and not is_granted('ROLE_ACCEPT_CHANGES') %}
+                                    {% if event.hasUpdate %}
+                                        <span class="fa fa-question-circle" title="Record on moderation"></span>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if is_granted('ROLE_ACCEPT_CHANGES') %}
+                                    {% for change in event.changes  %}
+                                        {% if change.modificationType != "edit_init" %}
+                                            <a href="{{path('change_deny', {
+                                                id: change.id
+                                            })
+                                            }}">
+                                                <span class="fa fa-ban alert-danger"></span>
+                                            </a><br>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    {% for change in event.userChanges(app.user)  %}
+                                        {% if change.modificationType != "edit_init" %}
+                                            <a href="{{path('change_deny', {
+                                                id: change.id
+                                            })
+                                            }}">
+                                                <span class="fa fa-ban alert-danger"></span>
+                                            </a><br>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if is_granted('ROLE_ACCEPT_CHANGES') %}
+                                    {% for change in event.changes  %}
+                                        {% if change.modificationType != "edit_init" %}
+                                            <a href="{{path('change_accept', {
+                                                id: change.id
+                                            })
+                                            }}">
+                                                <span class="fa fa-check alert-success"></span>
+                                            </a><br>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endif %}
                 {% endfor %}
             </tbody>
         </table>

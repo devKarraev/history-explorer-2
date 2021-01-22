@@ -100,7 +100,8 @@
                                         {% for change in person.changes  %}
                                             {% if change.modificationType != "edit_init" %}
                                                 <a href="{{path('admin_changes_edit', {
-                                                    id: change.person.id
+                                                    id: change.person.id,
+                                                    type: 'person'
                                                 })
                                                 }}">
                                                     <span class="fa fa-eye"></span>

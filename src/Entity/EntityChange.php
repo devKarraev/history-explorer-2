@@ -48,6 +48,11 @@ class EntityChange
      */
     private $updatedPerson;
 
+    /**
+     * @ORM\OneToOne(targetEntity=Event::class, mappedBy="updateOf")
+     */
+    private $updatedEvent;
+
      public function getId(): ?int
     {
         return $this->id;
@@ -126,6 +131,24 @@ class EntityChange
         $newChangeEntityOf = null === $updatedPerson ? null : $this;
         if ($updatedPerson->getUpdateOf() !== $newChangeEntityOf) {
             $updatedPerson->setUpdateOf($newChangeEntityOf);
+        }
+
+        return $this;
+    }
+
+    public function getUpdatedEvent(): ?Event
+    {
+        return $this->updatedEvent;
+    }
+
+    public function setUpdatedEvent(?Event $updatedEvent): self
+    {
+        $this->updatedEvent = $updatedEvent;
+
+        // set (or unset) the owning side of the relation if necessary
+        $newChangeEntityOf = null === $updatedEvent ? null : $this;
+        if ($updatedEvent->getUpdateOf() !== $newChangeEntityOf) {
+            $updatedEvent->setUpdateOf($newChangeEntityOf);
         }
 
         return $this;

@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\EntityChange;
 use App\Entity\Event;
 use App\Entity\EventReference;
 use App\Entity\Person;
@@ -282,16 +283,24 @@ class EventController extends BaseController
     public function edit(Event $event, Request $request, EntityManagerInterface $em, UploaderHelper $uploaderHelper,
         UncertainNumberValidator $uncertainNumberValidator, ValidatorInterface $validator)
     {
-        $form = $this->createForm(EventFormType::class, $event, [
+        // It is necessary so that the original record doesn't change.
+        if ($request->getMethod() === 'POST') {
+            $eventClone = clone $this->eventRepository->find($request->get('id'));
+            $form = $this->createForm(EventFormType::class, $eventClone, [
 
-        ]);
+            ]);
+        } else {
+            $form = $this->createForm(EventFormType::class, $event, [
+
+            ]);
+        }
 
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()) {
 
             /** @var UploadedFile $uploadedFile */
-            $uploadedFile =  $form['imageFile']->getData();
+            $uploadedFile = $form['imageFile']->getData();
             if($uploadedFile) {
 
                 $violations = $validator->validate(
@@ -327,6 +336,24 @@ class EventController extends BaseController
             }
             else {
 
+                $user = $this->getUser();
+                $change = new EntityChange();
+                $change->setEvent($eventClone)->setModificationType("edit")->setChangedBy($user);
+                $em->persist($change);
+                $event->addChange($change);
+                $em->persist($change);
+
+                // create a clone
+                $eventClone->setUpdateOf($change);
+                $eventClone->setApproved(false);
+                $eventClone->setOwner($user);
+                if ($event->getHappenedAfter() === null && $event->getId() === $eventClone->getHappenedAfter()->getId()) {
+                    $eventClone->setHappenedAfter(null);
+                }
+                $em->persist($eventClone);
+
+                $em->flush();
+
                 $em->persist($event);
                 $em->flush();
                 $this->reorderEvents($em);
@@ -346,7 +373,7 @@ class EventController extends BaseController
 
         return $this->render(
             'event/edit.html.twig', [
-            'eventForm' => $form->createView(),
+            'form' => $form->createView(),
             'event' => $event,
             'addpersons'=> $addPersons,
         ]);
@@ -680,12 +707,11 @@ class EventController extends BaseController
 
     private function setOrder(Event& $event, EntityManager $em, bool $edit) : bool
     {
-
         $before = $event->getHappenedAfter();
         $after = $event->getHappenedBefore();
 
         if($edit) {
-            if( $before->getHappenedBefore() ==  $after->getHappenedAfter()) {
+            if( $before === null || $before->getHappenedBefore() ==  $after->getHappenedAfter() ) {
 
             } else {
                 dd("not ok");

@@ -1,0 +1,92 @@
+{% if personPagination %}
+    {{ knp_pagination_render(personPagination) }}
+{% endif %}
+<table class="table table-striped advanced-table" id="myUL">
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th>Number of Children</th>
+        <th>Roles</th>
+        <th></th>
+    </tr>
+    <tr>
+        <th>
+            <form>
+                <div class="input-group mb-3">
+                    <input type="text"
+                           name="q"
+                           class="form-control"
+                           placeholder="Search..."
+                           value="{{ app.request.query.get('q') }}"
+                    >
+                    <div class="input-group-append">
+                        <button type="submit"
+                                class="btn btn-outline-secondary">
+                            <span class="fa fa-filter"></span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </th>
+        <th></th>
+        <th></th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for entitiesBlock in personPagination %}
+        {% for entity in entitiesBlock %}
+            {% if entity.updateOf is null %}
+                <tr>
+                    <td><span class="caret">{{ entity.name }}</span>
+                        <ul class="nested">
+                            {% for childEntity in entitiesBlock %}
+                                {% if childEntity.updateOf is not null %}
+                                    <div>
+                                        <span>{{ childEntity.name }}</span>
+                                        <span class="child-actions">
+                                        <a href="{{path('change_accept', {
+                                            id: childEntity.updateOf.id,
+                                            redirectRoute: 'admin_changes_list'
+                                        })
+                                        }}">
+                                            <span class="fa fa-check alert-success"></span>
+                                        </a>
+                                        <a href="{{path('change_deny', {
+                                            id: childEntity.updateOf.id,
+                                            redirectRoute: 'admin_changes_list'
+                                        })
+                                        }}">
+                                            <span class="fa fa-ban alert-danger"></span>
+                                        </a>
+                                        <a href="{{path('admin_changes_edit', {
+                                            id: childEntity.id,
+                                            type: 'person'
+                                        })
+                                        }}"><span class="fa fa-eye"></span>
+                                        </a>
+                                    </span>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td>{{ entity.children|length }}</td>
+                    <td>
+                        <a href="{{path('admin_changes_edit', {
+                            id: entity.id,
+                            type: 'person'
+                        })
+                        }}"><span class="fa fa-eye"></span>
+                        </a>
+                    </td>
+                    <td></td>
+                </tr>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+    </tbody>
+</table>
+{% if personPagination %}
+    {{ knp_pagination_render(personPagination) }}
+{% endif %}

@@ -2,8 +2,8 @@
 
 namespace App\Controller\Admin;
 
-use App\Entity\Person;
-use App\Form\PersonFormType;
+use App\Logic\AdminChanges;
+use App\Repository\EventRepository;
 use App\Repository\PersonRepository;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,23 +19,35 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 class ChangesController extends AbstractController
 {
     /**
-     * @var int
-     */
-    const PAGE_LIMIT = 20;
-
-    /**
      * @var PersonRepository
      */
     private $personRepository;
 
     /**
+     * @var EventRepository
+     */
+    private $eventRepository;
+
+    /**
+     * @var AdminChanges
+     */
+    private $adminChanges;
+
+    /**
      * ChangesController constructor.
      *
+     * @param AdminChanges $adminChanges
      * @param PersonRepository $personRepository
+     * @param EventRepository $eventRepository
      */
     public function __construct(
-        PersonRepository $personRepository
-    ) {
+        AdminChanges $adminChanges,
+        PersonRepository $personRepository,
+        EventRepository $eventRepository
+    )
+    {
+        $this->adminChanges = $adminChanges;
+        $this->eventRepository = $eventRepository;
         $this->personRepository = $personRepository;
     }
 
@@ -45,75 +57,30 @@ class ChangesController extends AbstractController
     public function list(Request $request, PaginatorInterface $paginator): Response
     {
         $user = $this->getUser();
-        $pagination = null;
-
-        if (count($this->getDoctrine()->getRepository(\App\Entity\EntityChange::class)->findAll()) !== 0) {
-            $q = $request->query->get('q');
-            $queryBuilder = $this->personRepository->getForAdminChangesList($q);
-            $paginationData = $this->preparePaginator($queryBuilder->getQuery()->getResult());
-
-            $pagination = $paginator->paginate(
-                $paginationData,
-                $request->query->getInt('page', 1)/*page number*/,
-                self::PAGE_LIMIT/*limit per page*/
-            );
-        }
+        $personPagination = $this->personRepository->getPaginatedChanges($paginator, $request);
+        $eventPagination = $this->eventRepository->getPaginatedChanges($paginator, $request);
 
         return $this->render('admin_changes/list.html.twig', [
             'user' => $user,
-            'pagination' => $pagination
+            'personPagination' => $personPagination,
+            'eventPagination' => $eventPagination
         ]);
     }
 
     /**
-     * @Route ("/admin/changes/{id}/edit", name="admin_changes_edit")
+     * @Route ("/admin/changes/{id}/edit/{type}", name="admin_changes_edit", requirements={"type"="event|person"})
      */
-    public function edit(Request $request, Person $person): Response
+    public function edit(Request $request): Response
     {
-        $form = $this->createForm(PersonFormType::class, $person,
-            [ /* 'include_x' => true*/
-                'user' => $this->getUser(),
-            ]
-        );
+        $entity = $this->adminChanges->getEntityOfType($request->get('id'), $request->get('type'));
+        $form = $this->adminChanges->getFormType($request->get('type'), $entity, $this->getUser());
+        $templateView = $this->adminChanges->getTemplateView($request->get('type'));
 
-        $addChildren = [];
-        $q = $request->query->get('q');
-        if(strlen($q) > 0) {
-            $addChildren = $this->personRepository->findAllPossibleChildren($this->getUser(), $person, $q);
-        }
+        $templateOptions = [
+            'form' => $form->createView(),
+        ];
 
-        return $this->render(
-            'admin_changes/edit.html.twig', [
-            'personForm' => $form->createView(),
-            'person' => $person,
-            'addchildren'=> $addChildren,
-        ]);
-    }
-
-    /**
-     * Prepare paginator data for rendering.
-     *
-     * @param array $pagination
-     *
-     * @return array
-     */
-    private function preparePaginator(array $pagination): array
-    {
-        $resultArray = [];
-        foreach ($pagination as $entity) {
-            if ($entity->getUpdateOf() != null) {
-                $rootId = $entity->getUpdateOf()->getPerson()->getId();
-            } else {
-                $rootId = $entity->getId();
-            }
-
-            if (key_exists($rootId, $resultArray) === false) {
-                $resultArray[$rootId] = [$entity];
-            } else {
-                array_push($resultArray[$rootId] , $entity);
-            }
-        }
-
-        return $resultArray;
+        $templateOptions = $this->adminChanges->setTemplateOptions($request->get('type'), $templateOptions, $request->query->get('q'), $this->getUser(), $entity);
+        return $this->render($templateView, $templateOptions);
     }
 }

@@ -10,6 +10,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
+use Knp\Component\Pager\PaginatorInterface;
 
 /**
  * @method Person|null find($id, $lockMode = null, $lockVersion = null)
@@ -19,6 +20,10 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class PersonRepository extends ServiceEntityRepository
 {
+    /**
+     * @var int
+     */
+    const PAGE_LIMIT = 20;
 
     public function __construct(ManagerRegistry $registry)
     {
@@ -56,7 +61,13 @@ class PersonRepository extends ServiceEntityRepository
 
         $changesId = array_unique(array_map(function ($changeEntity) {
             return $changeEntity->getPerson()->getId();
-        }, $this->getEntityManager()->getRepository(\App\Entity\EntityChange::class)->findAll()));
+        }, $this->getEntityManager()
+                ->getRepository(\App\Entity\EntityChange::class)
+                ->createQueryBuilder('u')
+                ->where('u.person IS NOT NULL')
+                ->getQuery()
+                ->getResult()
+        ));
 
         $qb->where('p.updateOf IS NOT null')->orWhere($qb->expr()->in('p.id', $changesId));
 
@@ -390,5 +401,58 @@ class PersonRepository extends ServiceEntityRepository
     {
         return $qb ?: $this->createQueryBuilder('p');
             //->addSelect('COALESCE(p.born, p.bornEstimated, p.bornCalculated) as bornOrder');
+    }
+
+    public function getPaginatedChanges(PaginatorInterface $paginator, $request)
+    {
+        $pagination = null;
+
+        if (count($this->getEntityManager()
+                    ->getRepository(\App\Entity\EntityChange::class)
+                    ->createQueryBuilder('u')
+                    ->where('u.person IS NOT NULL')
+                    ->getQuery()
+                    ->getResult()
+                )!== 0
+            ) {
+                $q = $request->query->get('q');
+                $queryBuilder = $this->getForAdminChangesList($q);
+                $paginationData = $this->preparePaginator($queryBuilder->getQuery()->getResult());
+
+                $pagination = $paginator->paginate(
+                    $paginationData,
+                    $request->query->getInt('page', 1)/*page number*/,
+                    self::PAGE_LIMIT/*limit per page*/
+                );
+        }
+
+        return $pagination;
+    }
+
+    /**
+     * Prepare paginator data for rendering.
+     *
+     * @param array $pagination
+     *
+     * @return array
+     */
+    private function preparePaginator(array $pagination): array
+    {
+        $resultArray = [];
+        foreach ($pagination as $entity) {
+            if ($entity->getUpdateOf() != null) {
+                $rootId = $entity->getUpdateOf()->getPerson()->getId();
+            } else {
+                $rootId = $entity->getId();
+            }
+
+            if (key_exists($rootId, $resultArray) === false) {
+                $resultArray[$rootId] = [$entity];
+            } else {
+                array_push($resultArray[$rootId] , $entity);
+            }
+        }
+
+        return $resultArray;
     }
 }

@@ -21,9 +21,7 @@ class EntityChangeController extends AbstractController
         if(in_array('ROLE_ACCEPT_CHANGES', $user->getRoles()) || in_array('ROLE_ADMIN', $user->getRoles())
         || $user === $change->getChangedBy() ) {
             $l = $change->getLocation();
-            $e = $change->getEvent();
             if($l) $em->remove($l);
-            if($e) $em->remove($e);
             $em->remove($change);
             $em->flush();
         }
@@ -63,12 +61,22 @@ class EntityChangeController extends AbstractController
         else {
             $up = $change->getPerson();
             $p= $change->getUpdatedPerson();
+            $e = $change->getUpdatedEvent();
+            $ue = $change->getEvent();
+
            // dd($up);
             if($p && $up) {
                $up->updateFromChange($em, $p);
                $up->setApproved(true);
                $em->persist($up);
                $em->remove($p);
+            }
+
+            if($e && $ue) {
+                $ue->updateFromChange($em, $e);
+                $ue->setApproved(true);
+                $em->persist($ue);
+                $em->remove($e);
             }
         }
 
